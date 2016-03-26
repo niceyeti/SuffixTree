@@ -5,7 +5,14 @@
 !.gitignore
 
 #test input
-!Fasta.txt
+!Test1.txt
+!Test2.txt
+!Test3.txt
+!Test1BWT.txt
+!Test2BWT.txt
+!Test3BWT.txt
+!Tomato.txt
+!Yeast.txt
 
 #implementation notes
 !McCreight_ST_algorithm_detailed.pdf
@@ -17,5 +24,4 @@
 !SuffixTree.hpp
 !main.cpp
 !ukkonen.pdf
-
 
