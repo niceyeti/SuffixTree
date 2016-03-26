@@ -1,0 +1,21 @@
+#ignore everything
+*
+
+#except for these...
+!.gitignore
+
+#test input
+!Fasta.txt
+
+#implementation notes
+!McCreight_ST_algorithm_detailed.pdf
+!McCreightsAlgo_Example.pdf
+!SuffixTree-McCrieightConstruction.PDF
+
+#source
+!SuffixTree.cpp
+!SuffixTree.hpp
+!main.cpp
+!ukkonen.pdf
+
+
