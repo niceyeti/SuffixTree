@@ -1,2 +1,2 @@
->s1
-BANANA
+>s1 (BANANA under homomorphism: B->C  A->A  N->T)
+CATATA

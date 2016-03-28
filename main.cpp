@@ -8,6 +8,8 @@ int main(void)
 {
     string input;
     SuffixTree st;
+    Sequence seq;
+    string sigma = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ$";
 
     /*
     //build input from test files
@@ -39,11 +41,10 @@ int main(void)
     */
 
 
+    /*
     input = "tattt$";
     st.Build(&input);
     st.PrintBfs();
-    
-
     
     input = "tatttcgtagtcgaaaaatatagctagctcgctgtatagctctgaagcccgtagctaaccggtgaagcgcgt$";
     st.Build(&input);
@@ -56,9 +57,19 @@ int main(void)
     input = "aaaaaaaaaaaaaatttttttttttttaaaaaaaaaaaaacccccccccccccccccgggggggggatcg$";
     st.Build(&input);
     st.PrintBfs();
+    */
 
-    
+    input = "GTGGCGCG$";
+    st.Build(&input);
+    st.PrintBfs();
 
+    /*
+    parseFastaFile("Test3.txt", seq, sigma);
+    seq.seq += "$";
+    st.Build(&seq.seq);
+    //st.PrintBfs();
+    st.PrintBWT();
+    */
     return 0;
 }
 

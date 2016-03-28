@@ -1,7 +1,7 @@
 A
-N
-N
-B
+C
+C
+T
 $
 A
 A

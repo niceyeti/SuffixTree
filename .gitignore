@@ -24,4 +24,5 @@
 !SuffixTree.hpp
 !main.cpp
 !ukkonen.pdf
-
+!Util.hpp
+!Util.cpp

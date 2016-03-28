@@ -26,6 +26,10 @@ TreeNode::~TreeNode()
     }
 }
 
+/*
+CRITICAL: This is fixed, and does not count the number of non-null child edges.
+IF nodes are made to support flexible alphabets, this needs to be changed.
+*/
 int TreeNode::NumEdges()
 {
     return sizeof(Edges) / sizeof(Edge*);
@@ -80,6 +84,44 @@ bool TreeNode::InsertEdge(Edge* edge, char c)
     // bones seboomboom! can fit through the 
 
     return success;
+}
+
+/*
+Given some character in the input string, map it to its index in each node's Edges array.
+This is fine as-is for small alphabets (here four), but a lookup table would be better/faster
+for larger alphabets.
+*/
+char TreeNode::EdgeIndexToAlpha(int index)
+{
+     char c = '\0';
+
+    switch (index) {
+        case BASE_A:
+            c = 'A';
+        break;
+
+        case BASE_T:
+            c = 'T';
+        break;
+
+        case BASE_C:
+            c = 'C';
+        break;
+
+        case BASE_G:
+            c = 'G';
+        break;
+
+        case DOLLAR:
+            c = '$';
+        break;
+
+        default:
+            cout << "ERROR unmapped char in alphaToEdgeIndex: >" << c << "< FATAL" << endl;
+        break;
+    }
+
+    return c;
 }
 
 /*
@@ -231,7 +273,7 @@ void SuffixTree::_clear(TreeNode* root)
 
 void SuffixTree::PrintBfs()
 {
-    int i;
+    int i, maxDepth, averageDepth;
     TreeNode* node;
     list<TreeNode*> nodeQ;
 
@@ -243,10 +285,17 @@ void SuffixTree::PrintBfs()
     PrintSize();
 
     nodeQ.push_back(_root);
+    maxDepth = 0;
+    averageDepth = 0;
+
     while (!nodeQ.empty()) {
         //deque the next node
         node = nodeQ.front();
         nodeQ.pop_front();
+        //track depth statistics
+        if (node->StringDepth > maxDepth)
+            maxDepth = node->StringDepth;
+        averageDepth += node->StringDepth;
 
         //print node info
         if (node->LeafID < 0)
@@ -265,6 +314,9 @@ void SuffixTree::PrintBfs()
         cout << endl;
     }
 
+    cout << "String depth of deepest internal node: " << maxDepth << endl;
+    cout << "Average string depth of internal nodes: " << (averageDepth / this->numInternalNodes) << endl;
+
     cout << "\n" << endl;
 }
 
@@ -280,6 +332,7 @@ void SuffixTree::_printDfs(TreeNode* node)
     if (node != NULL) {
         for (int i = 0; i < node->NumEdges(); i++) {
             if (node->Edges[i] != NULL && node->Edges[i]->Node != NULL) {
+                cout << node->LeafID << ":" << node->StringDepth << endl;
                 _printDfs(node->Edges[i]->Node);
             }
         }
@@ -287,51 +340,60 @@ void SuffixTree::_printDfs(TreeNode* node)
 }
 
 /*
-    Implements the suffixlink-following logic to find the lowest internal node under which
-    to insert the next suffix. This function encapsulates node-hopping, if any are needed.
+Just an assignment requirement. Uses DFS to print the BWT of the suffix tree.
+The BWT is defined as traversing dfs, visiting children in lexicographic order,
+and printing out the letter corresponding to the leafId minus one. In this
+way, the letter preceding any prefix given by some leafId is is the bwt for that suffix.
 
-    Returns: An internal node under which to perform the next insertion.
-
-    
-    //if u (the parent of last leaf inserted) has a suffix link, take it
-    if (u->SuffixLink != NULL) {
-    linkedSubtree = u->SuffixLink;
-    }
-    //else, traverse to u's parent, and follows its suffix link, since it is guaranteed to have a value
-    else {
-    //there is one degenerate edge case: in which the suffixlink of the parent points to the child; if so, bump up one level
-    //draw the suffix tree of 'tattt$' to demonstrate this edge case, on suffix 't$'
-    if (u->Parent->SuffixLink == u) {
-    cout << "DEGENERATE WARNING: u->parent->suffixlink == u" << endl;
-    linkedSubtree = u->Parent->Parent->SuffixLink;
-    }
-    //else, grab parent's suffix link, per normal
-    else {
-    linkedSubtree = u->Parent->SuffixLink;
-    if (linkedSubtree == NULL) {
-    cout << "ERROR subtree ptr NULL in insertSuffix. Fatal!" << endl;
-    return NULL;
-    }
-    }
-    //NodeHops to get to v from v''
-    }
-
+BWT[i] = s[ leafId - 1 ]  <--The previous letter! Not, say, a zero-based index adjustment.
 */
-TreeNode* SuffixTree::_getLinkedSubtree(TreeNode* u, const int suffixIndex)
+void SuffixTree::PrintBWT()
 {
-    TreeNode* linkedSubtree = NULL;
+    _printBWT(_root);
+}
 
-    //if u (the parent of last leaf inserted) has a suffix link, take it
-    if (u->SuffixLink != NULL) {
-        linkedSubtree = u->SuffixLink;
-    }
-    //else, traverse to u's parent, and follows its suffix link, since it is guaranteed to have a value
-    else {
-        //NodeHops to get to v from v'
-        linkedSubtree = _nodeHops(u,suffixIndex);
-    }
+//Inner utility for printing the bwt of a suffix tree. BWT is defined as post-order outputting of the leaf ids.
+void SuffixTree::_printBWT(TreeNode* node)
+{
+    if (node != NULL) {
+        //print leaf node info
+        if (node->LeafID >= 0) {
+            #if defined DBG
+                if (node->LeafID > _input->length()) {
+                    cout << "ERROR LeafID > input length in _printBWT FATAL" << endl;
+                }
+            #endif
 
-    return linkedSubtree;
+            //print both the leaf id and the character by its bwt index
+            int bwtIndex = node->LeafID - 1;
+            if (bwtIndex < 0) {
+                //wrap the index of previous char to end of string, if index is zero
+                bwtIndex = _input->length() - 1;
+            }
+            cout << node->LeafID << ":" << _input->at(bwtIndex) << endl;
+        }
+        else{
+            //else this is an internal node, so print the rest of nodes using dfs, in lexicographic order
+            for (int i = 0; i < node->NumEdges(); i++) {
+                if (node->Edges[i] != NULL && node->Edges[i]->Node != NULL) {
+                    _printBWT(node->Edges[i]->Node);
+                }
+            }
+        }
+    }
+}
+
+//Just an assignment requirement. Given some node, print its immediate children.
+void SuffixTree::PrintChildren(TreeNode* node)
+{
+    for (int i = 0; i < ALPHABET_SIZE; i++) {
+        if (node->Edges[i] != NULL) {
+            TreeNode* child = node->Edges[i]->Node;
+            cout << "child char: " << child->EdgeIndexToAlpha(i) << endl;
+            cout << "child->ID: " << child->LeafID << endl;
+            cout << "child->StringDepth: " << child->StringDepth << "\r\n" << endl;
+        }
+    }
 }
 
 /*
@@ -425,7 +487,6 @@ TreeNode* SuffixTree::_nodeHops(TreeNode* u, const int suffixIndex)
 
     return v_prime;
 }
-
 
 TreeNode* SuffixTree::_nodeHopsOLD(TreeNode* u, const int suffixIndex)
 {
@@ -687,6 +748,7 @@ void SuffixTree::Build(const string* s)
     }
     if (!_isValidInput(s)) {
         cout << "ERROR input improperly formatted. Build() aborted" << endl;
+        return;
     }
 
     //clear existing tree, if any
@@ -708,6 +770,7 @@ void SuffixTree::Build(const string* s)
         if (i == 34) {
             cout << "dbg" << endl;
         }
+
         v = _insertSuffix(u,i);
         u = v;
     }
