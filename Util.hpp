@@ -18,6 +18,7 @@ typedef struct sequence {
     string desc;
 }Sequence;
 
-void parseFastaFile(const string fname, Sequence& output, const string& sigma);
+bool parseAlphabetFile(const string& alphaFile, string& alphabet);
+bool parseFastaFile(const string fname, Sequence& output, const string& sigma);
 bool fileExists(const string& path);
 string filter(const string& s, const string& validChars);

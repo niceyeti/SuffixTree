@@ -55,9 +55,9 @@ class TreeNode {
 class SuffixTree {
 public:
     SuffixTree();
-    SuffixTree(const string& alphabet);
+    SuffixTree(string& input, const string& alphabet);
     ~SuffixTree();
-    void Build(const string* s);
+    void Build(string* s);
     void Clear();
     void PrintBfs();
     void PrintDfs();
@@ -69,10 +69,10 @@ public:
     void PrintSize();
     void SetAlphabet(const string& alphabet);
 private:
-    int numLeaves, numInternalNodes, numEdges;
+    int _numLeaves, _numInternalNodes, _numEdges;
     TreeNode* _root;
     string _alphabet;
-    string const* _input;
+    string* _input;
     bool _isValidInput(const string* s);
     TreeNode* _nodeHops(TreeNode* u, const int suffixIndex);
     TreeNode* _nodeHopsOLD(TreeNode* u, const int suffixIndex);

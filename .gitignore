@@ -5,24 +5,26 @@
 !.gitignore
 
 #test input
-!Test1.txt
-!Test2.txt
-!Test3.txt
-!Test1BWT.txt
-!Test2BWT.txt
-!Test3BWT.txt
-!Tomato.txt
-!Yeast.txt
+!english.txt
+!atcg.txt
+!test1.txt
+!test2.txt
+!test3.txt
+!test1BWT.txt
+!test2BWT.txt
+!test3BWT.txt
+!tomato.txt
+!yeast.txt
 
 #implementation notes
 !McCreight_ST_algorithm_detailed.pdf
 !McCreightsAlgo_Example.pdf
 !SuffixTree-McCrieightConstruction.PDF
+!ukkonen.pdf
 
 #source
 !SuffixTree.cpp
 !SuffixTree.hpp
 !main.cpp
-!ukkonen.pdf
 !Util.hpp
 !Util.cpp

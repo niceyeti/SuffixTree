@@ -191,19 +191,24 @@ SuffixTree::SuffixTree()
 {
     _root = NULL;
     _input = NULL;
-    numEdges = 0;
-    numInternalNodes = 0;
-    numLeaves = 0;
+    _numEdges = 0;
+    _numInternalNodes = 0;
+    _numLeaves = 0;
 }
 
-SuffixTree::SuffixTree(const string& alphabet)
+/*
+Input is left non-const since we may need to modify it (appending $, etc).
+*/
+SuffixTree::SuffixTree(string& input, const string& alphabet)
 {
     _alphabet = alphabet;
     _root = NULL;
     _input = NULL;
-    numEdges = 0;
-    numInternalNodes = 0;
-    numLeaves = 0;
+    _numEdges = 0;
+    _numInternalNodes = 0;
+    _numLeaves = 0;
+
+    Build(&input);
 }
 
 SuffixTree::~SuffixTree()
@@ -224,7 +229,7 @@ void SuffixTree::SetAlphabet(const string& alphabet)
 void SuffixTree::PrintSize()
 {
     if (!IsEmpty()) {
-        cout << "From input string of len " << _input->length() << ", suffix-tree has " << numLeaves << " leaves, " << numInternalNodes << " internal nodes, and " << numEdges << " edges." << endl;
+        cout << "From input string of len " << _input->length() << ", suffix-tree has " << _numLeaves << " leaves, " << _numInternalNodes << " internal nodes, and " << _numEdges << " edges." << endl;
     }
     else {
         cout << "Tree empty" << endl;
@@ -233,20 +238,22 @@ void SuffixTree::PrintSize()
 
 void SuffixTree::Size(int* edges, int* internalNodes, int* leaves)
 {
-    *edges = numEdges;
-    *internalNodes = numInternalNodes;
-    *leaves = numLeaves;
+    *edges = _numEdges;
+    *internalNodes = _numInternalNodes;
+    *leaves = _numLeaves;
 }
 
 void SuffixTree::Clear()
 {
     if (_root != NULL) {
+        cout << "Clearing tree... " << endl;
         _clear(_root);
         delete _root;
         _root = NULL;
-        numEdges = 0;
-        numInternalNodes = 0;
-        numLeaves = 0;
+        _input = NULL;
+        _numEdges = 0;
+        _numInternalNodes = 0;
+        _numLeaves = 0;
     }
 }
 
@@ -315,7 +322,7 @@ void SuffixTree::PrintBfs()
     }
 
     cout << "String depth of deepest internal node: " << maxDepth << endl;
-    cout << "Average string depth of internal nodes: " << (averageDepth / this->numInternalNodes) << endl;
+    cout << "Average string depth of internal nodes: " << (averageDepth / this->_numInternalNodes) << endl;
 
     cout << "\n" << endl;
 }
@@ -349,7 +356,9 @@ BWT[i] = s[ leafId - 1 ]  <--The previous letter! Not, say, a zero-based index a
 */
 void SuffixTree::PrintBWT()
 {
+    cout << "SuffixTree bwt index: " << endl;
     _printBWT(_root);
+    cout << endl;
 }
 
 //Inner utility for printing the bwt of a suffix tree. BWT is defined as post-order outputting of the leaf ids.
@@ -364,21 +373,19 @@ void SuffixTree::_printBWT(TreeNode* node)
                 }
             #endif
 
-            //print both the leaf id and the character by its bwt index
-            int bwtIndex = node->LeafID - 1;
-            if (bwtIndex < 0) {
-                //wrap the index of previous char to end of string, if index is zero
-                bwtIndex = _input->length() - 1;
-            }
-            cout << node->LeafID << ":" << _input->at(bwtIndex) << endl;
+            //print the leaf id character by its bwt index char (leadId - 1)
+            int bwtIndex = node->LeafID == 0 ? (_input->length() - 1) : (node->LeafID - 1);
+            //cout << node->LeafID << ":" << _input->at(bwtIndex) << endl;
+            cout << _input->at(bwtIndex);
         }
-        else{
+        else {
             //else this is an internal node, so print the rest of nodes using dfs, in lexicographic order
             for (int i = 0; i < node->NumEdges(); i++) {
                 if (node->Edges[i] != NULL && node->Edges[i]->Node != NULL) {
                     _printBWT(node->Edges[i]->Node);
                 }
             }
+            cout << flush;
         }
     }
 }
@@ -614,8 +621,8 @@ void SuffixTree::_insertLeaf(TreeNode* parent, const int suffixIndex, const int 
     newEdge->Node = newLeaf;
     //set the outlink of the parent node
     parent->InsertEdge(newEdge, _input->at(newEdge->i));
-    numLeaves++;
-    numEdges++;
+    _numLeaves++;
+    _numEdges++;
 }
 
 /*
@@ -635,7 +642,7 @@ TreeNode* SuffixTree::_splitEdge(TreeNode* parent, Edge* oldEdge, const int edge
     newInternalNode->Parent = parent;
     newInternalNode->LeafID = -1;
     newInternalNode->StringDepth = parent->StringDepth + (edgeSplitIndex - oldEdge->i);
-    numInternalNodes++;
+    _numInternalNodes++;
 
     //split this edge, allocing a new one (continuation) that the new internal node will contain
     Edge* continuation = (Edge*)malloc(sizeof(Edge));
@@ -647,7 +654,7 @@ TreeNode* SuffixTree::_splitEdge(TreeNode* parent, Edge* oldEdge, const int edge
     //fix the original edge
     oldEdge->j = edgeSplitIndex - 1;
     oldEdge->Node = newInternalNode;
-    numEdges++;
+    _numEdges++;
 
     return newInternalNode;
 }
@@ -729,9 +736,9 @@ TreeNode* SuffixTree::_findPath(TreeNode* v_prime, const int suffixOffset, const
 //nucleotide alphabet 'atcg' (plus dollar).
 bool SuffixTree::_isValidInput(const string* s)
 {
-    if (s->at(s->length() - 1) != '$') {
-        //arguably this is the class' internal requirement, but fine for hw
-        cout << "ERROR string must end with $" << endl;
+    if (s->length() == 0) {
+        cout << "ERROR input string cannot be empty" << endl;
+        return false;
     }
 
     for (int i = 0; i < s->length(); i++) {
@@ -749,24 +756,33 @@ Constructs a suffix-tree using suffix-links, per McCreight's algorithm.
 See the pdf in this repo for an explanation of the variables and private functions;
 they were written to correspond with conventions in the notes.
 */
-void SuffixTree::Build(const string* s)
+void SuffixTree::Build(string* s)
 {
     int i;
-    _input = s;
-    TreeNode* u, * v;
+    TreeNode* v;
 
+    //clear existing tree, if any (this nulls _input, so do it first)
+    if (!this->IsEmpty()) {
+        Clear();
+    }
+
+    _input = s;
     if (_input == NULL) {
         cout << "ERROR input string ptr null in Build()" << endl;
         return;
     }
-    if (!_isValidInput(s)) {
-        cout << "ERROR input improperly formatted. Build() aborted" << endl;
+    if (_input->length() == 0) {
+        cout << "ERROR input string empty. Build() aborted" << endl;
+        return;
+    }
+    if (!_isValidInput(_input)) {
+        cout << "ERROR suffix tree input improperly formatted. Build() aborted" << endl;
         return;
     }
 
-    //clear existing tree, if any
-    if (_root != NULL) {
-        Clear();
+    //format requirement: make sure strings ends with '$'
+    if (_input->at(_input->length() - 1) != '$') {
+        (*_input) += "$";
     }
 
     //initialize the root node, with its suffix link and parent ptr pointing to itself
@@ -775,21 +791,15 @@ void SuffixTree::Build(const string* s)
     _root->SuffixLink = _root;
     _root->LeafID = -1;
     _root->StringDepth = 0;
-    numInternalNodes = 1;
+    _numInternalNodes = 1;
 
-    for (i = 0, u = _root; i < s->length(); i++) {
-        //starting from u, insert next suffix, returning v (parent of a new leaf)
-        //cout << "inserting suffix " << i << " >" << s->substr(i, string::npos) << "<" << endl;
-        /*if (s->substr(i, string::npos) == "G$") {
-            cout << "dbug" << endl;
-        }*/
-
-        v = _insertSuffix(u,i);
-        u = v;
+    for (i = 0, v = _root; i < s->length(); i++) {
+        v = _insertSuffix(v,i);
 
         //report progress, for very large trees
-        if (i % 200 == 199) {
-            cout << "Inserted " << i << " of " << s->length() << " substrings" << endl;
+        if (i % 1000 == 999) {
+            cout << "\rInserted " << i << " of " << s->length() << " suffixes, " << (int)(((float)i / (float)s->length()) * 100) << "% complete          " << flush;
         }
     }
+    cout << "\r100% complete.                              "<< endl;
 }
