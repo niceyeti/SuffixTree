@@ -67,8 +67,8 @@ int main(void)
     parseFastaFile("Test3.txt", seq, sigma);
     seq.seq += "$";
     st.Build(&seq.seq);
-    st.PrintBfs();
-    //st.PrintBWT();
+    //st.PrintBfs();
+    st.PrintBWT();
     
     return 0;
 }
