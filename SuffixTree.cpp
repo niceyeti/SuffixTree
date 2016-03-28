@@ -450,6 +450,7 @@ TreeNode* SuffixTree::_nodeHops(TreeNode* u, const int suffixIndex)
         }
     #endif
 
+    //get the len of this edge, to hop
     edgeLen = hoppedEdge->j - hoppedEdge->i + 1;
     //find lowest internal node below v_prime at or *before* the point |Beta| is exhausted (which may be v_prime itself)
     //while next hop would not make beta negative
@@ -463,14 +464,22 @@ TreeNode* SuffixTree::_nodeHops(TreeNode* u, const int suffixIndex)
         c = _input->at(betaIt);
         hoppedEdge = v_prime->GetEdge(c);
         if (hoppedEdge == NULL) {
+            //this is valid;
             cout << "ERROR hopped edge NULL in nodeHops" << endl;
         }
-        edgeLen = (hoppedEdge->j - hoppedEdge->i + 1);
+        else {
+            //get the len of this edge, to hop
+            edgeLen = hoppedEdge->j - hoppedEdge->i + 1;
+        }
     }
     /*Post-loop: (1) landed directly on an internal node (Beta was exausted), or (2) we stopped above an edge too
     long for the remainder of Beta. In case (1), we return v_prime. In case (2), an internal node needs to be
     created on this edge, and findPath need not be called.
     */
+
+    if (hoppedEdge == NULL) {
+        return v_prime;
+    }
 
     #if defined DBG
     if (beta < 0) {
@@ -540,30 +549,34 @@ TreeNode* SuffixTree::_insertSuffix(TreeNode* u, const int suffixIndex)
     //implements the four cases in the notes; these may be reducible, but this is clearer
     //case 1A: SL(u) known and u != root, follow link and findPath from it
     if (u->SuffixLink != NULL && u != _root) {
-        //run findPath from v, with string index starting at suffixIndex plus the skipped chars of starting from v
-        cout << "dbg" << endl;
+         //run findPath from v, with string index starting at suffixIndex plus the skipped chars of starting from v
+        //cout << "dbg" << endl;
         v = _findPath(u->SuffixLink, suffixIndex + u->StringDepth - 1, suffixIndex);
     }
     //case 1B: SL(u) is known and u == root, just call findPath from root
     else if (u->SuffixLink != NULL && u == _root) {
-        cout << "dbg" << endl;
+        //cout << "dbg" << endl;
         v = _findPath(_root, suffixIndex, suffixIndex);
     }
     //case 2A: SL(u) unknown and u' != root, get v' from u', and nodeHop, then findPath
     else if (u->SuffixLink == NULL && u->Parent != _root) {
-        cout << "dbg" << endl;
+        //cout << "dbg" << endl;
         //see notes; u contains all info to get to u_prime then v_prime; nodeHops returns lowest internal node whose prefix comprises Beta
         v = _nodeHops(u, suffixIndex);
         //set link of u; this must be done after nodeHops
-        u->SuffixLink = v;
+        if (u != _root) {
+            u->SuffixLink = v;
+        }
         //if v is new, expect findPath to immediately insert suffix as a leaf and return the same v
         v = _findPath(v, v->StringDepth+suffixIndex, suffixIndex);
     }
     //case 2B: SL(u) unknown and u' == root
     else if(u->SuffixLink == NULL && u->Parent == _root) {
-        cout << "dbg" << endl;
+        //cout << "dbg" << endl;
         v = _nodeHops(u, suffixIndex);
-        u->SuffixLink = v;
+        if (u != _root) {
+            u->SuffixLink = v;
+        }
         v = _findPath(v, suffixIndex + v->StringDepth, suffixIndex);
     }
 
@@ -766,13 +779,17 @@ void SuffixTree::Build(const string* s)
 
     for (i = 0, u = _root; i < s->length(); i++) {
         //starting from u, insert next suffix, returning v (parent of a new leaf)
-        cout << "inserting suffix " << i << " >" << s->substr(i, string::npos) << "<" << endl;
-        if (i == 34) {
-            cout << "dbg" << endl;
-        }
+        //cout << "inserting suffix " << i << " >" << s->substr(i, string::npos) << "<" << endl;
+        /*if (s->substr(i, string::npos) == "G$") {
+            cout << "dbug" << endl;
+        }*/
 
         v = _insertSuffix(u,i);
         u = v;
+
+        //report progress, for very large trees
+        if (i % 200 == 199) {
+            cout << "Inserted " << i << " of " << s->length() << " substrings" << endl;
+        }
     }
-    //cout << "dbg" << endl;
 }

@@ -59,17 +59,17 @@ int main(void)
     st.PrintBfs();
     */
 
-    input = "GTGGCGCG$";
+    //input = "GTGGCGCG$";
+    input = "GGCGCG$";
     st.Build(&input);
     st.PrintBfs();
 
-    /*
     parseFastaFile("Test3.txt", seq, sigma);
     seq.seq += "$";
     st.Build(&seq.seq);
-    //st.PrintBfs();
-    st.PrintBWT();
-    */
+    st.PrintBfs();
+    //st.PrintBWT();
+    
     return 0;
 }
 
