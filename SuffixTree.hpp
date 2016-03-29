@@ -16,9 +16,24 @@
 #include <list>
 #endif
 
+#ifndef _IOMANIP_
+#include <iomanip>
+#endif
+
+#ifndef _CHRONO_
+#include <chrono>
+#endif
+
+#ifndef _CTIME_
+#include <ctime>
+#endif
+
+
 #include "Util.hpp"
 
 #define DBG
+
+#define PERFTEST
 
 using namespace std;
 
@@ -84,6 +99,8 @@ public:
     void PrintBWT();
     void Size(int* edges, int* internalNodes, int* leaves);
     void PrintSize();
+    void PrintBWT(const string& outputFile);
+    void _printBWT(TreeNode* node, ostream& outputStream);
     void SetAlphabet(const string& alphabet);
 private:
     int _numLeaves, _numInternalNodes, _numEdges;

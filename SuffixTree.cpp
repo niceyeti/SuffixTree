@@ -654,6 +654,12 @@ void SuffixTree::Build(string* s, const string& alphabet)
         Clear();
     }
 
+    
+    #ifdef PERFTEST
+    //track build time stats
+    clock_t c_start = clock();
+    #endif
+
     _input = s;
     SetAlphabet(alphabet);
     if (_input == NULL) {
@@ -691,6 +697,54 @@ void SuffixTree::Build(string* s, const string& alphabet)
         }
     }
     cout << "\r100% complete.                                       "<< endl;
+
+    #ifdef PERFTEST
+    clock_t c_end = clock();
+    cout << fixed << setprecision(2) << "CPU time used: " << 1000.0 * (c_end - c_start) / CLOCKS_PER_SEC << " ms" << endl;;
+    #endif
+}
+
+//merge with overloaded version
+void SuffixTree::_printBWT(TreeNode* node, ostream& outputStream)
+{
+    if (node != NULL) {
+        //print leaf node info
+        if (node->NodeID >= 0) {
+#if defined DBG
+            if (node->NodeID > _input->length()) {
+                cout << "ERROR NodeID > input length in _printBWT FATAL" << endl;
+            }
+#endif
+
+            //print the leaf id character by its bwt index char (leadId - 1)
+            int bwtIndex = node->NodeID == 0 ? (_input->length() - 1) : (node->NodeID - 1);
+            outputStream << _input->at(bwtIndex) << "\r\n";
+        }
+        else {
+            //else this is an internal node, so print the rest of nodes using dfs, in lexicographic order
+            for (int i = 0; i < node->NumEdges(); i++) {
+                _printBWT(node->Edges[i].Node);
+            }
+            outputStream << flush;
+        }
+    }
+}
+
+void SuffixTree::PrintBWT(const string& ofname)
+{
+    if (fileExists(ofname)) {
+        ofstream outputFile(ofname);
+        if (outputFile.good()) {
+            _printBWT(_root, outputFile);
+            outputFile.close();
+        }
+        else {
+            cout << "Failed to open BWT output file: " << ofname;
+        }
+    }
+    else {
+        cout << "ERROR BT outputFile not found: " << ofname << endl;
+    }
 }
 
 void SuffixTree::PrintNativeSpaceStats()

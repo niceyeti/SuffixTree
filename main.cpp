@@ -30,7 +30,10 @@ int main(int argc, char* argv[])
                     
                     //do other suffix tree stuff...
                     //suffixTree.PrintBfs();
-                    suffixTree.PrintBWT();
+                    //suffixTree.PrintBWT();
+                    string outputFile = inputFile.substr(0, inputFile.find_first_of('.'));
+                    outputFile += "_BWT.txt";
+                    suffixTree.PrintBWT(outputFile);
                     suffixTree.PrintNativeSpaceStats();
                     suffixTree.PrintSize();
                     suffixTree.Clear();
