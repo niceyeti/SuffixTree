@@ -72,7 +72,7 @@ bool parseFastaFile(const string fname, Sequence& output, const string& sigma)
             //init
             output.seq.clear();
             seqnum = 0;
-            cout << "sigma=" << sigma << endl;
+            cout << "Parsing sequence from file: " << fname << ". This may require a few seconds, for input files > 200kb." << endl;
             while (getline(inputFile, line)) {
                 //check if line begins with '>'; if so, advance state, and grab the description line
                 if (seqnum == 0 && line.length() > 0 && line[0] == '>') {
@@ -85,6 +85,9 @@ bool parseFastaFile(const string fname, Sequence& output, const string& sigma)
                 success = true;
             }
             inputFile.close();
+        }
+        else {
+            cout << "ERROR file could not be opened! " << fname << endl;
         }
     }
     else {

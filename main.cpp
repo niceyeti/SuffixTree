@@ -14,7 +14,6 @@ int main(int argc, char* argv[])
     Sequence seq;
     string sigma = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ$";
 
-    /*
     //For api for the hw
     if (argc != 3) {
         cout << "Incorrect number of parameters. Usage: './st [local sequence file] [local alphabet file]'" << endl;
@@ -27,15 +26,14 @@ int main(int argc, char* argv[])
         if (fileExists(alphaFile)) {
             if (parseAlphabetFile(alphaFile, alphabet)) {
                 if (parseFastaFile(inputFile, inputSequence, alphabet)) {
-                    cout << "got alpha: " << alphabet << endl;
-                    cout << "got Sequence: desc=" << inputSequence.desc << "  seq=" << inputSequence.seq << endl;
-                    cin >> inputFile;
                     SuffixTree suffixTree(inputSequence.seq, alphabet);
                     
                     //do other suffix tree stuff...
                     //suffixTree.PrintBfs();
                     suffixTree.PrintBWT();
-
+                    suffixTree.PrintNativeSpaceStats();
+                    suffixTree.PrintSize();
+                    suffixTree.Clear();
                 }
                 else {
                     cout << "ERROR could not parse FASTA file" << endl;
@@ -52,7 +50,7 @@ int main(int argc, char* argv[])
     else {
         cout << "ERROR input file not found: " << inputFile << endl;
     }
-    */
+    
 
     /*
     //build input from test files
@@ -110,6 +108,10 @@ int main(int argc, char* argv[])
     st.Build(&input,sigma);
     st.PrintBfs();
     */  
+
+    
+
+
 
     /*
     //input = "GTGGCGCG$";
