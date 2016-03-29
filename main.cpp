@@ -14,8 +14,8 @@ int main(int argc, char* argv[])
     Sequence seq;
     string sigma = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ$";
 
-
-    //For the api:
+    /*
+    //For api for the hw
     if (argc != 3) {
         cout << "Incorrect number of parameters. Usage: './st [local sequence file] [local alphabet file]'" << endl;
         return -1;
@@ -29,11 +29,12 @@ int main(int argc, char* argv[])
                 if (parseFastaFile(inputFile, inputSequence, alphabet)) {
                     cout << "got alpha: " << alphabet << endl;
                     cout << "got Sequence: desc=" << inputSequence.desc << "  seq=" << inputSequence.seq << endl;
-
-                    SuffixTree st(inputSequence.seq, alphabet);
+                    cin >> inputFile;
+                    SuffixTree suffixTree(inputSequence.seq, alphabet);
                     
                     //do other suffix tree stuff...
-
+                    //suffixTree.PrintBfs();
+                    suffixTree.PrintBWT();
 
                 }
                 else {
@@ -51,7 +52,7 @@ int main(int argc, char* argv[])
     else {
         cout << "ERROR input file not found: " << inputFile << endl;
     }
-
+    */
 
     /*
     //build input from test files
@@ -82,31 +83,41 @@ int main(int argc, char* argv[])
     st.PrintBfs();
     */
 
-
     /*
-    input = "tattt$";
-    st.Build(&input);
+    input = "aaaa$";
+    st.Build(&input,sigma);
     st.PrintBfs();
+    st.Clear();
+
+    
+    input = "tattt$";
+    st.Build(&input,sigma);
+    st.PrintBfs();
+    st.Clear();
+
     
     input = "tatttcgtagtcgaaaaatatagctagctcgctgtatagctctgaagcccgtagctaaccggtgaagcgcgt$";
-    st.Build(&input);
+    st.Build(&input,sigma);
     st.PrintBfs();
+    st.PrintBWT();
 
+    
     input = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa$";
-    st.Build(&input);
+    st.Build(&input,sigma);
     st.PrintBfs();
 
     input = "aaaaaaaaaaaaaatttttttttttttaaaaaaaaaaaaacccccccccccccccccgggggggggatcg$";
-    st.Build(&input);
+    st.Build(&input,sigma);
     st.PrintBfs();
-    
+    */  
 
-
+    /*
     //input = "GTGGCGCG$";
     input = "GGCGCG$";
-    st.Build(&input);
+    st.Build(&input,sigma);
     st.PrintBfs();
-
+    */
+    /*
     parseFastaFile("Test3.txt", seq, sigma);
     seq.seq += "$";
     st.Build(&seq.seq);

@@ -9,88 +9,132 @@ TreeNode::TreeNode()
     SuffixLink = NULL;
     Parent = NULL;
     StringDepth = -1;
-    LeafID = -1;
-
-    for (int i = 0; i < 5; i++) {
-        Edges[i] = NULL;
-    }
+    NodeID = -1;
 }
 
 TreeNode::~TreeNode()
 {
-    //Verifies that all children of a node are deleted before the node; this requires deletion traversal sets a nodes child pointers to null before deleting the node
-    for (int i = 0; i < NumEdges(); i++) {
-        if (Edges[i] != NULL) {
-            cout << "ERROR TreeNode child pointer not null in ~TreeNode (bottom up Node deletion assumed)" << endl;
-        }
-    }
 }
 
 /*
 CRITICAL: This is fixed, and does not count the number of non-null child edges.
 IF nodes are made to support flexible alphabets, this needs to be changed.
-*/
+
 int TreeNode::NumEdges()
 {
     return sizeof(Edges) / sizeof(Edge*);
 }
+*/
+
+int TreeNode::NumEdges()
+{
+    return Edges.size();
+}
 
 /*
 Given a symbol, return its corresponding out-edge. Returns null if there is none.
+Parameter *input* is required since edge labels correspond with indices in input.
+
 */
-Edge* TreeNode::GetEdge(char c)
+Edge* TreeNode::GetEdge(char c, const string& input)
 {
-    return Edges[AlphaToEdgeIndex(c)];
+    for (int i = 0; i < Edges.size(); i++) {
+        if (input[Edges[i].i] == c) {
+            return &Edges[i];
+        }
+    }
+
+    return NULL;
 }
+
+/*
+int TreeNode::AlphaToEdgeIndex(char c)
+{
+    for (int i = 0; i < Edges.size(); i++) {
+        if()
+    }
+}
+
+int TreeNode::EdgeIndexToAlpha(int index)
+{
+
+}
+*/
+
 
 /*
 This is an unusual utility, but a (child) node needs a way to retrieve the edge with which
 it is associated in its parent's edges. This searches the edge's of this node's parents
 for the edge containing a pointer to this node.
+
+An alternative is to just have each node also store a pointer to the edge that points to it.
 */
 Edge* TreeNode::GetAssociatedEdge()
 {
-    Edge* childsEdge = NULL;
-
     for (int i = 0; i < this->Parent->NumEdges(); i++){
-        if (this->Parent->Edges[i] != NULL && this == this->Parent->Edges[i]->Node) {
-            childsEdge = this->Parent->Edges[i];
-            break;
+        if (this == this->Parent->Edges[i].Node) {
+            return &this->Parent->Edges[i];
         }
     }
 
     #if defined DBG
-    if (childsEdge == NULL) {
         cout << "ERROR no edge found for child in GetChildsEdge! Fatal!" << endl;
-    }
     #endif
 
-    return childsEdge;
+    return NULL;
 }
 
 //Insert an edge into the node, at index in Edges given by c. Returns false if the edge already exists.
-bool TreeNode::InsertEdge(Edge* edge, char c)
+void TreeNode::AddEdge(int edge_i, int edge_j, TreeNode* edgeChild, const string& input)
 {
-    bool success = false;
+    int i;
 
-    if (!HasChild(c)) {
-        Edges[AlphaToEdgeIndex(c)] = edge;
-        success = true;
+    #if defined DBG
+    if (HasChild(input[edge_i], input)) {
+        //cannot happen by structure of a suffix tree; if it does, we're in trouble
+        cout << "ERROR edge already exists! FATAL. Attempted to insert edge with existing out-edge for " << input[edge_i] << endl;
     }
+    #endif
+
+    //this is terribly inefficient and abuses the vector api to emulate list api, but works for now. On each insert, resize the vector and shift remaining items to maintain lexicographic order of edges
+    //find index of insertion point
+    i = 0;
+    while(i < Edges.size() && input[Edges[i].i] < input[edge_i]){
+        i++;
+    }
+    //i now points to position at which to insert; which may be one past end
+
+    //reached end, so just append the new item
+    if (i == Edges.size()) {
+        Edges.resize(Edges.size() + 1); // resize is supposed to guarantee vector values do not change
+        Edges[Edges.size() - 1].i = edge_i;
+        Edges[Edges.size() - 1].j = edge_j;
+        Edges[Edges.size() - 1].Node = edgeChild;
+    }
+    // else not at end, so insert and copy previous items right (awful)
     else {
-        cout << "ERROR edge could not be inserted in InsertEdge()! Child already exists. Fatal" << endl;
+        Edges.resize(Edges.size() + 1); // resize is supposed to guarantee vector values do not change
+        //copy-shift the old elements one to the right
+        for (int j = Edges.size() - 1; j > i; j--) {
+            Edges[j].i = Edges[j - 1].i;
+            Edges[j].j = Edges[j - 1].j;
+            Edges[j].Node = Edges[j - 1].Node;
+        }
+        //insert the new edge at position i
+        Edges[i].i = edge_i;
+        Edges[i].j = edge_j;
+        Edges[i].Node = edgeChild;
     }
-//    bones seboomboom! skeletor's    groom boon room womb tomb doom loom zoom-zoom vroom boom-boom moon rheum assume 
-    // bones seboomboom! can fit through the 
 
-    return success;
+    //lastly, set the child to point at the parent
+    edgeChild->Parent = this;
 }
 
 /*
 Given some character in the input string, map it to its index in each node's Edges array.
 This is fine as-is for small alphabets (here four), but a lookup table would be better/faster
 for larger alphabets.
-*/
+
 char TreeNode::EdgeIndexToAlpha(int index)
 {
      char c = '\0';
@@ -123,13 +167,12 @@ char TreeNode::EdgeIndexToAlpha(int index)
 
     return c;
 }
+*/
 
 /*
 Given some character in the input string, map it to its index in each node's Edges array.
 This is fine as-is for small alphabets (here four), but a lookup table would be better/faster
 for larger alphabets.
-
-*/
 int TreeNode::AlphaToEdgeIndex(char c)
 {
     int index = -1;
@@ -166,26 +209,19 @@ int TreeNode::AlphaToEdgeIndex(char c)
 
     return index;
 }
+*/
 
 /*
 Given some symbol (char) in the overall alphabet (Sigma), this checks if the corresponding
 child edge/node exists in Edges.
+
+const string& input is required to correlate an edge-label (an index in input) with the given char c.
 */
-bool TreeNode::HasChild(char c)
+bool TreeNode::HasChild(char c, const string& input)
 {
-    return Edges[AlphaToEdgeIndex(c)] != NULL;
+    return GetEdge(c, input) != NULL;
 }
 
-//TreeNode has a child if any of its child edge pointers are non-null
-bool TreeNode::HasChild()
-{
-    for (int i = 0; i < NumEdges(); i++) {
-        if (Edges[i] != NULL) {
-            return true;
-        }
-    }
-    return false;
-}
 
 SuffixTree::SuffixTree()
 {
@@ -201,14 +237,13 @@ Input is left non-const since we may need to modify it (appending $, etc).
 */
 SuffixTree::SuffixTree(string& input, const string& alphabet)
 {
-    _alphabet = alphabet;
     _root = NULL;
     _input = NULL;
     _numEdges = 0;
     _numInternalNodes = 0;
     _numLeaves = 0;
 
-    Build(&input);
+    Build(&input,alphabet);
 }
 
 SuffixTree::~SuffixTree()
@@ -216,14 +251,17 @@ SuffixTree::~SuffixTree()
     Clear();
 }
 
-bool SuffixTree::IsEmpty()
-{
-    return _root == NULL;
-}
-
 void SuffixTree::SetAlphabet(const string& alphabet)
 {
     _alphabet = alphabet;
+    if (_alphabet.find('$') == string::npos) {
+        _alphabet += "$";
+    }
+}
+
+bool SuffixTree::IsEmpty()
+{
+    return _root == NULL;
 }
 
 void SuffixTree::PrintSize()
@@ -248,33 +286,35 @@ void SuffixTree::Clear()
     if (_root != NULL) {
         cout << "Clearing tree... " << endl;
         _clear(_root);
-        delete _root;
         _root = NULL;
         _input = NULL;
         _numEdges = 0;
         _numInternalNodes = 0;
         _numLeaves = 0;
+        _alphabet.clear();
     }
 }
 
-//Recursively deletes subtree under some root
-//It is assumed the caller will delete the root itself, and set to null as required.
+//Recursively deletes subtree under some root, and root
 void SuffixTree::_clear(TreeNode* root)
 {
     if (root != NULL) {
         for (int i = 0; i < root->NumEdges(); i++) {
-            if (root->Edges[i] != NULL) {
-                if (root->Edges[i]->Node == NULL) {
-                    cout << "WARN _clear() encountered non-null Edge with null Node ptr??" << endl;
-                }
-                //recursively delete the substree beneath this child
-                _clear(root->Edges[i]->Node);
-                //at this point, we know the subtree has been recursively deleted; so delete this edge and the node it points to
-                delete root->Edges[i]->Node;
-                delete root->Edges[i];
-                root->Edges[i] = NULL;
+            #if defined DBG
+            if (root->Edges[i].Node == NULL) {
+                cout << "WARN _clear() encountered non-null Edge with null Node ptr??" << endl;
             }
+            #endif
+            //recursively delete the subtree beneath this child
+            _clear(root->Edges[i].Node);
+            delete root->Edges[i].Node;
         }
+        //delete the edges, after recursively deleting all subtrees
+        if (root->Edges.size() > 0) {
+            root->Edges.clear();
+        }
+        //finally, delete the root
+        //delete root;
     }
 }
 
@@ -294,7 +334,6 @@ void SuffixTree::PrintBfs()
     nodeQ.push_back(_root);
     maxDepth = 0;
     averageDepth = 0;
-
     while (!nodeQ.empty()) {
         //deque the next node
         node = nodeQ.front();
@@ -305,18 +344,16 @@ void SuffixTree::PrintBfs()
         averageDepth += node->StringDepth;
 
         //print node info
-        if (node->LeafID < 0)
+        if (node->NodeID < 0)
             cout << "Internal node child edges: ";
         else
-            cout << "Leaf " << node->LeafID << ": (id=" << _input->substr(node->LeafID,string::npos) << ", depth=" << node->StringDepth << ")";
+            cout << "Leaf " << node->NodeID << ": (id=" << _input->substr(node->NodeID,string::npos) << ", depth=" << node->StringDepth << ")";
 
         //print edge info (internal nodes only)
         for (i = 0; i < node->NumEdges(); i++) {
-            if (node->Edges[i] != NULL) {
-                string edgeLabel = _input->substr(node->Edges[i]->i, node->Edges[i]->j - node->Edges[i]->i + 1);
-                cout << "[" << node->Edges[i]->i << "," << node->Edges[i]->j << "](" << edgeLabel << ")   ";
-                nodeQ.push_back(node->Edges[i]->Node);
-            }
+            string edgeLabel = _input->substr(node->Edges[i].i, node->Edges[i].j - node->Edges[i].i + 1);
+            cout << "[" << node->Edges[i].i << "," << node->Edges[i].j << "](" << edgeLabel << ")   ";
+            nodeQ.push_back(node->Edges[i].Node);
         }
         cout << endl;
     }
@@ -338,10 +375,8 @@ void SuffixTree::_printDfs(TreeNode* node)
 {
     if (node != NULL) {
         for (int i = 0; i < node->NumEdges(); i++) {
-            if (node->Edges[i] != NULL && node->Edges[i]->Node != NULL) {
-                cout << node->LeafID << ":" << node->StringDepth << endl;
-                _printDfs(node->Edges[i]->Node);
-            }
+            cout << node->NodeID << ":" << node->StringDepth << endl;
+            _printDfs(node->Edges[i].Node);
         }
     }
 }
@@ -349,10 +384,10 @@ void SuffixTree::_printDfs(TreeNode* node)
 /*
 Just an assignment requirement. Uses DFS to print the BWT of the suffix tree.
 The BWT is defined as traversing dfs, visiting children in lexicographic order,
-and printing out the letter corresponding to the leafId minus one. In this
-way, the letter preceding any prefix given by some leafId is is the bwt for that suffix.
+and printing out the letter corresponding to the NodeID minus one. In this
+way, the letter preceding any prefix given by some NodeID is is the bwt for that suffix.
 
-BWT[i] = s[ leafId - 1 ]  <--The previous letter! Not, say, a zero-based index adjustment.
+BWT[i] = s[ NodeID - 1 ]  <--The previous letter! Not, say, a zero-based index adjustment.
 */
 void SuffixTree::PrintBWT()
 {
@@ -366,24 +401,22 @@ void SuffixTree::_printBWT(TreeNode* node)
 {
     if (node != NULL) {
         //print leaf node info
-        if (node->LeafID >= 0) {
+        if (node->NodeID >= 0) {
             #if defined DBG
-                if (node->LeafID > _input->length()) {
-                    cout << "ERROR LeafID > input length in _printBWT FATAL" << endl;
+                if (node->NodeID > _input->length()) {
+                    cout << "ERROR NodeID > input length in _printBWT FATAL" << endl;
                 }
             #endif
 
             //print the leaf id character by its bwt index char (leadId - 1)
-            int bwtIndex = node->LeafID == 0 ? (_input->length() - 1) : (node->LeafID - 1);
-            //cout << node->LeafID << ":" << _input->at(bwtIndex) << endl;
+            int bwtIndex = node->NodeID == 0 ? (_input->length() - 1) : (node->NodeID - 1);
+            //cout << node->NodeID << ":" << _input->at(bwtIndex) << endl;
             cout << _input->at(bwtIndex);
         }
         else {
             //else this is an internal node, so print the rest of nodes using dfs, in lexicographic order
             for (int i = 0; i < node->NumEdges(); i++) {
-                if (node->Edges[i] != NULL && node->Edges[i]->Node != NULL) {
-                    _printBWT(node->Edges[i]->Node);
-                }
+                _printBWT(node->Edges[i].Node);
             }
             cout << flush;
         }
@@ -393,13 +426,11 @@ void SuffixTree::_printBWT(TreeNode* node)
 //Just an assignment requirement. Given some node, print its immediate children.
 void SuffixTree::PrintChildren(TreeNode* node)
 {
-    for (int i = 0; i < ALPHABET_SIZE; i++) {
-        if (node->Edges[i] != NULL) {
-            TreeNode* child = node->Edges[i]->Node;
-            cout << "child char: " << child->EdgeIndexToAlpha(i) << endl;
-            cout << "child->ID: " << child->LeafID << endl;
+    for (int i = 0; i < node->NumEdges(); i++) {
+            TreeNode* child = node->Edges[i].Node;
+            cout << "child char: " << _input[node->Edges[i].i] << endl;
+            cout << "child->ID: " << child->NodeID << endl;
             cout << "child->StringDepth: " << child->StringDepth << "\r\n" << endl;
-        }
     }
 }
 
@@ -450,7 +481,7 @@ TreeNode* SuffixTree::_nodeHops(TreeNode* u, const int suffixIndex)
 
     //get the first outgoing edge by char
     c = _input->at(betaIt);
-    hoppedEdge = v_prime->GetEdge(c);
+    hoppedEdge = v_prime->GetEdge(c,*_input);
     #if defined DBG
         if (hoppedEdge == NULL) {
             cout << "ERROR hoppedEdge NULL! Fatal." << endl;
@@ -469,7 +500,7 @@ TreeNode* SuffixTree::_nodeHops(TreeNode* u, const int suffixIndex)
         v_prime = hoppedEdge->Node;
         //get the next edge
         c = _input->at(betaIt);
-        hoppedEdge = v_prime->GetEdge(c);
+        hoppedEdge = v_prime->GetEdge(c,*_input);
         if (hoppedEdge == NULL) {
             //this is valid;
             cout << "ERROR hopped edge NULL in nodeHops" << endl;
@@ -509,7 +540,7 @@ TreeNode* SuffixTree::_nodeHopsOLD(TreeNode* u, const int suffixIndex)
     int beta = u->StringDepth - u->Parent->StringDepth;
     TreeNode* v_prime = u->Parent->SuffixLink;
     char c = _input->at(v_prime->StringDepth + suffixIndex);
-    Edge* hoppedEdge = v_prime->GetEdge(c);
+    Edge* hoppedEdge = v_prime->GetEdge(c,*_input);
 
     //find lowest internal node below v_prime at or *before* the point |Beta| is exhausted (which may be v_prime itself)
     //while next hop would not make beta negative
@@ -520,7 +551,7 @@ TreeNode* SuffixTree::_nodeHopsOLD(TreeNode* u, const int suffixIndex)
         v_prime = hoppedEdge->Node;
         //get the next edge symbol and its corresponding edge
         c = _input->at(v_prime->StringDepth + suffixIndex);
-        hoppedEdge = v_prime->GetEdge(c);
+        hoppedEdge = v_prime->GetEdge(c,*_input);
         if (hoppedEdge == NULL) {
             cout << "ERROR hopped edge NULL in nodeHops" << endl;
         }
@@ -610,17 +641,18 @@ void SuffixTree::_insertLeaf(TreeNode* parent, const int suffixIndex, const int 
 {
     //make the new leaf
     TreeNode* newLeaf = new TreeNode();
-    newLeaf->LeafID = suffixIndex;
+    newLeaf->NodeID = suffixIndex;
     newLeaf->Parent = parent;
-    //cout << "string depth???" << endl;
     newLeaf->StringDepth = _input->length() - suffixIndex;
     //make the new edge
-    Edge* newEdge = (Edge*)malloc(sizeof(Edge));
-    newEdge->i = edge_i;
-    newEdge->j = _input->length() - 1;
-    newEdge->Node = newLeaf;
+    //Edge* newEdge = (Edge*)malloc(sizeof(Edge));
+    //newEdge->i = edge_i;
+    //newEdge->j = _input->length() - 1;
+    //newEdge->Node = newLeaf;
+
     //set the outlink of the parent node
-    parent->InsertEdge(newEdge, _input->at(newEdge->i));
+    parent->AddEdge(edge_i, _input->length() - 1, newLeaf, *_input);
+    //parent->InsertEdge(newEdge, _input->at(newEdge->i));
     _numLeaves++;
     _numEdges++;
 }
@@ -640,17 +672,18 @@ TreeNode* SuffixTree::_splitEdge(TreeNode* parent, Edge* oldEdge, const int edge
     //alloc the new internal node (the new v)
     TreeNode* newInternalNode = new TreeNode();
     newInternalNode->Parent = parent;
-    newInternalNode->LeafID = -1;
-    newInternalNode->StringDepth = parent->StringDepth + (edgeSplitIndex - oldEdge->i);
     _numInternalNodes++;
+    //set internal node id to the negation of the number of internal nodes
+    newInternalNode->NodeID = -1 * _numInternalNodes;
+    newInternalNode->StringDepth = parent->StringDepth + (edgeSplitIndex - oldEdge->i);
 
     //split this edge, allocing a new one (continuation) that the new internal node will contain
-    Edge* continuation = (Edge*)malloc(sizeof(Edge));
-    continuation->i = edgeSplitIndex;
-    continuation->j = oldEdge->j;
-    continuation->Node = oldEdge->Node;
-    continuation->Node->Parent = newInternalNode;
-    newInternalNode->InsertEdge(continuation, _input->at(continuation->i));
+    //Edge* continuation = (Edge*)malloc(sizeof(Edge));
+    //continuation->i = edgeSplitIndex;
+    //continuation->j = oldEdge->j;
+    //continuation->Node = oldEdge->Node;
+    //continuation->Node->Parent = newInternalNode;
+    newInternalNode->AddEdge(edgeSplitIndex, oldEdge->j, oldEdge->Node, *_input);
     //fix the original edge
     oldEdge->j = edgeSplitIndex - 1;
     oldEdge->Node = newInternalNode;
@@ -691,7 +724,7 @@ TreeNode* SuffixTree::_findPath(TreeNode* v_prime, const int suffixOffset, const
     //walk edges, and insert new leaf when insertion point is found
     found = false;
     i = suffixOffset;
-    edge = parent->GetEdge(_input->at(i));
+    edge = parent->GetEdge(_input->at(i),*_input);
     while (!found) {
         //if current edge (of parent) is null, create a new edge/leaf node and insert into the current parent node
         if (edge == NULL) {
@@ -724,7 +757,7 @@ TreeNode* SuffixTree::_findPath(TreeNode* v_prime, const int suffixOffset, const
             //else, all chars matched on this edge, so advance to the next edge
             else {
                 parent = edge->Node;
-                edge = parent->GetEdge(_input->at(i));
+                edge = parent->GetEdge(_input->at(i),*_input);
             }
         }
     }
@@ -756,7 +789,7 @@ Constructs a suffix-tree using suffix-links, per McCreight's algorithm.
 See the pdf in this repo for an explanation of the variables and private functions;
 they were written to correspond with conventions in the notes.
 */
-void SuffixTree::Build(string* s)
+void SuffixTree::Build(string* s, const string& alphabet)
 {
     int i;
     TreeNode* v;
@@ -767,6 +800,7 @@ void SuffixTree::Build(string* s)
     }
 
     _input = s;
+    SetAlphabet(alphabet);
     if (_input == NULL) {
         cout << "ERROR input string ptr null in Build()" << endl;
         return;
@@ -789,7 +823,7 @@ void SuffixTree::Build(string* s)
     _root = new TreeNode();
     _root->Parent = _root;
     _root->SuffixLink = _root;
-    _root->LeafID = -1;
+    _root->NodeID = -1;
     _root->StringDepth = 0;
     _numInternalNodes = 1;
 

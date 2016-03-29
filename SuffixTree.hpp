@@ -4,15 +4,7 @@
 #include <string>
 #include <vector>
 #include <list>
-
 #include "Util.hpp"
-
-#define DOLLAR 0
-#define BASE_A 1
-#define BASE_C 2
-#define BASE_G 3
-#define BASE_T 4
-#define ALPHABET_SIZE 5
 
 #define DBG
 
@@ -33,21 +25,22 @@ class TreeNode {
     public:
         TreeNode();
         ~TreeNode();
-        bool InsertEdge(Edge* edge, char c);
         inline int NumEdges();
-        Edge* GetEdge(char c);
+        Edge* GetEdge(char c, const string& input);
         Edge* GetAssociatedEdge();
-        bool HasChild();
-        bool HasChild(char c);
-        int AlphaToEdgeIndex(char c);
-        char EdgeIndexToAlpha(int index);
-        //leafid represents the starting index of this suffix in input; less than zero for internal nodes
-        //this may need to become NodeID, for future assignment
-        int LeafID;
+        bool HasChild(char c, const string& input);
+        //int AlphaToEdgeIndex(char c);
+        //char EdgeIndexToAlpha(int index);
+        //bool InsertEdge(Edge* edge, char c, const string& input);
+        void AddEdge(int edge_i, int edge_j, TreeNode* edgeChild, const string& input);
+        //For leaves, this represents the starting index of this suffix in input; less than zero for internal nodes
+        int NodeID;
         //the character-length of all edges up to this node. 
         int StringDepth;
         //Need |Sigma| edge pointers; here five, for the alphabet {a,t,c,g,$}
-        Edge* Edges[ALPHABET_SIZE];
+        //Edge* Edges[ALPHABET_SIZE];
+        //Edges MUST be stored in lexigraphic order
+        vector<Edge> Edges;
         TreeNode* SuffixLink;
         TreeNode* Parent;
 };
@@ -57,7 +50,7 @@ public:
     SuffixTree();
     SuffixTree(string& input, const string& alphabet);
     ~SuffixTree();
-    void Build(string* s);
+    void Build(string* s, const string& alphabet);
     void Clear();
     void PrintBfs();
     void PrintDfs();
@@ -70,10 +63,15 @@ public:
     void SetAlphabet(const string& alphabet);
 private:
     int _numLeaves, _numInternalNodes, _numEdges;
-    TreeNode* _root;
     string _alphabet;
+    //stores translation from some character to its index in
+    //vector<int> _alphaToIndexTable;
+    //vector<char> _indexToAlphaTable;
+    TreeNode* _root;
     string* _input;
     bool _isValidInput(const string* s);
+    //char _edgeIndexToAlpha(int index);
+    //int _alphaToEdgeIndex(char c);
     TreeNode* _nodeHops(TreeNode* u, const int suffixIndex);
     TreeNode* _nodeHopsOLD(TreeNode* u, const int suffixIndex);
     void _insertLeaf(TreeNode* parent, const int suffixIndex, const int edge_i);
