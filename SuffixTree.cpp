@@ -176,7 +176,8 @@ void SuffixTree::PrintSize()
         int totalBytes = sizeof(SuffixTree) + (_numLeaves + _numInternalNodes) * sizeof(TreeNode) + _numEdges * sizeof(Edge);
         cout << "Given the static class size overhead, the current tree consumes a minimum of " << totalBytes << " bytes." << endl;
         cout << "Actual size may differ as vector allocator allocates larger data capacity than usage per node." << endl;
-     }
+        cout << "Space constant (tree size / input size): " << (totalBytes / _input->length()) << endl;
+    }
     else {
         cout << "Tree empty" << endl;
     }
@@ -731,7 +732,7 @@ void SuffixTree::PrintLongestRepeatSubstring()
     int len = deepest->StringDepth;
     //deepest internal node necessarily has exactly two leaf children;
     int startIndex = deepest->Edges[0].Node->NodeID; //start index is not unique
-    cout << "Longest repeating substring, of length " << deepest->StringDepth << " starting at string index " << startIndex << ":";
+    cout << "Longest repeating substring, of length " << deepest->StringDepth << " starting at string index " << startIndex << ": ";
     //print the path label, the longest repeating substring
     cout << _input->substr(startIndex, len) << endl;
 }
@@ -784,7 +785,7 @@ void SuffixTree::WriteBWT(const string& ofname)
         }
     }
     else {
-        cout << "ERROR BT outputFile not found: " << ofname << endl;
+        cout << "ERROR BWT outputFile not found: " << ofname << endl;
     }
 }
 
