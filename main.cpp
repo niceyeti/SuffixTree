@@ -40,7 +40,8 @@ int main(int argc, char* argv[])
                     outputFile += "_BWT.txt";
                     cout << "outputting to file: " << outputFile << endl;
                     suffixTree.WriteBWT(outputFile);
-                    suffixTree.PrintBWT();
+                    //Uncomment the next line to print the BWT to the console, which is awful for large strings.
+                    //suffixTree.PrintBWT();
                     suffixTree.PrintNativeSpaceStats();
                     suffixTree.PrintSize();
                     suffixTree.PrintLongestRepeatSubstring();

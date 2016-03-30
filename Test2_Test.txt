@@ -1,0 +1,1 @@
+Incorrect number of parameters. Usage: './st [local sequence file] [local alphabet file]'

@@ -7,14 +7,23 @@
 #test input
 !english.txt
 !atcg.txt
-!test1.txt
-!test2.txt
-!brca2.txt
-!test1BWT.txt
-!test2BWT.txt
-!brca2BWT.txt
-!tomato.txt
-!yeast.txt
+!Test1.txt
+!Test2.txt
+!BRCA2.txt
+!Test1_BWT.txt
+!Test2_BWT.txt
+!BRCA2_BWT.txt
+!Tomato_BWT.txt
+!Tomato.txt
+!Yeast.txt
+!README.md
+!compile
+!BRCA2_Test.txt
+!Tomato_Test.txt
+!Yeast_Test.txt
+!Test1_Test.txt
+!Test2_Test.txt
+!runTests
 
 #implementation notes
 !McCreight_ST_algorithm_detailed.pdf
