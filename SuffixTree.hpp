@@ -55,6 +55,10 @@ class TreeNode {
         inline int NumEdges();
         Edge* GetEdge(char c, const string& input);
         Edge* GetAssociatedEdge();
+        inline bool IsInternal();
+        //has any child?
+        inline bool HasChild();
+        //has given child?
         bool HasChild(char c, const string& input);
         void AddEdge(int edge_i, int edge_j, TreeNode* edgeChild, const string& input);
         //For leaves, this represents the starting index of this suffix in input; less than zero for internal nodes
@@ -99,9 +103,9 @@ public:
     void PrintBWT();
     void Size(int* edges, int* internalNodes, int* leaves);
     void PrintSize();
-    void PrintBWT(const string& outputFile);
-    void _printBWT(TreeNode* node, ostream& outputStream);
+    void WriteBWT(const string& outputFile);
     void SetAlphabet(const string& alphabet);
+    void PrintLongestRepeatSubstring();
 private:
     int _numLeaves, _numInternalNodes, _numEdges;
     string _alphabet;
@@ -113,7 +117,8 @@ private:
     TreeNode* _splitEdge(TreeNode* parent, Edge* oldEdge, const int edgeSplitIndex);
     void _clear(TreeNode* node);
     void _printDfs(TreeNode* node);
-    void _printBWT(TreeNode* node);
+    //void _printBWT(TreeNode* node);
+    void _printBWT(TreeNode* node, ostream& outputStream);
     TreeNode* _findPath(TreeNode* v, const int startOffset, const int suffixIndex);
     TreeNode* _insertSuffix(TreeNode* lastInserted, const int suffixIndex);
 };

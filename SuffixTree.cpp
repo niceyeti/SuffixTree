@@ -36,6 +36,11 @@ Edge* TreeNode::GetEdge(char c, const string& input)
     return NULL;
 }
 
+bool TreeNode::IsInternal()
+{
+    return this->NodeID < 0;
+}
+
 /*
 This is an unusual utility, but a child node needs a way to retrieve the edge with which
 it is associated in its parent's edges. This searches the edge's of this node's parents
@@ -58,6 +63,11 @@ Edge* TreeNode::GetAssociatedEdge()
     #endif
 
     return NULL;
+}
+
+bool TreeNode::HasChild()
+{
+    return this->NumEdges() == 0;
 }
 
 //Insert an edge into the node, at index in Edges given by c. Returns false if the edge already exists.
@@ -162,7 +172,11 @@ void SuffixTree::PrintSize()
 {
     if (!IsEmpty()) {
         cout << "From input string of len " << _input->length() << ", suffix-tree has " << _numLeaves << " leaves, " << _numInternalNodes << " internal nodes, and " << _numEdges << " edges." << endl;
-    }
+        cout << "SuffixTree=" << sizeof(SuffixTree) << " bytes  TreeNode=" << sizeof(TreeNode) << " bytes  Edge=" << sizeof(Edge) << " bytes" << endl;
+        int totalBytes = sizeof(SuffixTree) + (_numLeaves + _numInternalNodes) * sizeof(TreeNode) + _numEdges * sizeof(Edge);
+        cout << "Given the static class size overhead, the current tree consumes a minimum of " << totalBytes << " bytes." << endl;
+        cout << "Actual size may differ as vector allocator allocates larger data capacity than usage per node." << endl;
+     }
     else {
         cout << "Tree empty" << endl;
     }
@@ -284,35 +298,8 @@ BWT[i] = s[ NodeID - 1 ]  <--The previous letter! Not, say, a zero-based index a
 void SuffixTree::PrintBWT()
 {
     cout << "SuffixTree bwt index: " << endl;
-    _printBWT(_root);
+    _printBWT(_root,cout);
     cout << endl;
-}
-
-//Inner utility for printing the bwt of a suffix tree. BWT is defined as post-order outputting of the leaf ids.
-void SuffixTree::_printBWT(TreeNode* node)
-{
-    if (node != NULL) {
-        //print leaf node info
-        if (node->NodeID >= 0) {
-            #if defined DBG
-                if (node->NodeID > _input->length()) {
-                    cout << "ERROR NodeID > input length in _printBWT FATAL" << endl;
-                }
-            #endif
-
-            //print the leaf id character by its bwt index char (leadId - 1)
-            int bwtIndex = node->NodeID == 0 ? (_input->length() - 1) : (node->NodeID - 1);
-            //cout << node->NodeID << ":" << _input->at(bwtIndex) << endl;
-            cout << _input->at(bwtIndex);
-        }
-        else {
-            //else this is an internal node, so print the rest of nodes using dfs, in lexicographic order
-            for (int i = 0; i < node->NumEdges(); i++) {
-                _printBWT(node->Edges[i].Node);
-            }
-            cout << flush;
-        }
-    }
 }
 
 //Just an assignment requirement. Given some node, print its immediate children.
@@ -704,33 +691,87 @@ void SuffixTree::Build(string* s, const string& alphabet)
     #endif
 }
 
+/*
+Simply finds the lowest internal node, in terms of string depth. This path label from root to this node necssarily represents
+the longest repeated substring in the tree/input. The deepest internal node could also be tracked in the
+build procedure, this just the work explicitly after building the tree, for the hw api.
+*/
+void SuffixTree::PrintLongestRepeatSubstring()
+{
+    int i, maxDepth;
+    TreeNode* node, *deepest;
+    list<TreeNode*> nodeQ;
+
+    if (_root == NULL) {
+        cout << "Tree empty." << endl;
+        return;
+    }
+
+    cout << "Searching for longest repeated substring..." << endl;
+    //search BFS for the deepest internal node
+    nodeQ.push_back(_root);
+    deepest = _root;
+    while (!nodeQ.empty()) {
+        //deque the next node
+        node = nodeQ.front();
+        nodeQ.pop_front();
+        
+        //track deepest internal node
+        if (node->IsInternal() && node->StringDepth > deepest->StringDepth) {
+            deepest = node;
+        }
+
+        //queue up child nodes
+        for (i = 0; i < node->NumEdges(); i++) {
+            nodeQ.push_back(node->Edges[i].Node);
+        }
+    }
+
+    //print the deepest node
+    int len = deepest->StringDepth;
+    //deepest internal node necessarily has exactly two leaf children;
+    int startIndex = deepest->Edges[0].Node->NodeID; //start index is not unique
+    cout << "Longest repeating substring, of length " << deepest->StringDepth << " starting at string index " << startIndex << ":";
+    //print the path label, the longest repeating substring
+    cout << _input->substr(startIndex, len) << endl;
+}
+
 //merge with overloaded version
 void SuffixTree::_printBWT(TreeNode* node, ostream& outputStream)
 {
     if (node != NULL) {
-        //print leaf node info
+        //print leaf info
         if (node->NodeID >= 0) {
 #if defined DBG
-            if (node->NodeID > _input->length()) {
+            if (node->NodeID >= _input->length()) {
                 cout << "ERROR NodeID > input length in _printBWT FATAL" << endl;
             }
 #endif
-
             //print the leaf id character by its bwt index char (leadId - 1)
             int bwtIndex = node->NodeID == 0 ? (_input->length() - 1) : (node->NodeID - 1);
-            outputStream << _input->at(bwtIndex) << "\r\n";
+            //for printing, output to screen without line breaks
+            if (&outputStream == &cout) {
+                outputStream << _input->at(bwtIndex);
+            }
+            //else, we're writing to some file ostream, so append linebreaks like Ananths test files
+            else {
+                outputStream << _input->at(bwtIndex) << "\n";
+            }
         }
         else {
             //else this is an internal node, so print the rest of nodes using dfs, in lexicographic order
             for (int i = 0; i < node->NumEdges(); i++) {
-                _printBWT(node->Edges[i].Node);
+                _printBWT(node->Edges[i].Node,outputStream);
             }
             outputStream << flush;
         }
     }
+    else {
+        cout << "ERROR node NULL in _printBWT FATAL" << endl;
+    }
 }
 
-void SuffixTree::PrintBWT(const string& ofname)
+void SuffixTree::WriteBWT(const string& ofname)
 {
     if (fileExists(ofname)) {
         ofstream outputFile(ofname);

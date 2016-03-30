@@ -14,14 +14,20 @@ int main(int argc, char* argv[])
     Sequence seq;
     string sigma = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ$";
 
+    /*
     //For api for the hw
     if (argc != 3) {
         cout << "Incorrect number of parameters. Usage: './st [local sequence file] [local alphabet file]'" << endl;
         return -1;
     }
+    */
 
-    inputFile = argv[1];
-    alphaFile = argv[2];
+    //inputFile = argv[1];
+    //alphaFile = argv[2];
+
+    inputFile = "Test2.txt";
+    alphaFile = "english.txt";
+    //alphaFile = "atcg.txt";
     if (fileExists(inputFile)){
         if (fileExists(alphaFile)) {
             if (parseAlphabetFile(alphaFile, alphabet)) {
@@ -33,9 +39,12 @@ int main(int argc, char* argv[])
                     //suffixTree.PrintBWT();
                     string outputFile = inputFile.substr(0, inputFile.find_first_of('.'));
                     outputFile += "_BWT.txt";
-                    suffixTree.PrintBWT(outputFile);
+                    cout << "outputting to file: " << outputFile << endl;
+                    //suffixTree.WriteBWT(outputFile);
+                    suffixTree.PrintBWT();
                     suffixTree.PrintNativeSpaceStats();
                     suffixTree.PrintSize();
+                    suffixTree.PrintLongestRepeatSubstring();
                     suffixTree.Clear();
                 }
                 else {
