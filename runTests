@@ -2,8 +2,10 @@
 #This script executes all tests in this directory, and spits their output to the right-hand files.
 #The BWT of each input will also be written to files named [input file name]_BWT.txt.
 echo Running Test1.txt...
+echo > Test1_Test.txt
 ./st Test1.txt english.txt > Test1_Test.txt
 echo Running Test2.txt...
+echo > Test2_Test.txt
 ./st Test2.txt english.txt > Test2_Test.txt
 echo Running BRCA2.txt...
 ./st BRCA2.txt atcg.txt > BRCA2_Test.txt

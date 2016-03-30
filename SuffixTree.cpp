@@ -383,7 +383,7 @@ TreeNode* SuffixTree::_nodeHops(TreeNode* u, const int suffixIndex)
         hoppedEdge = v_prime->GetEdge(c,*_input);
         if (hoppedEdge == NULL) {
             //this is valid;
-            cout << "ERROR hopped edge NULL in nodeHops" << endl;
+            //cout << "ERROR hopped edge NULL in nodeHops" << endl;
         }
         else {
             //get the len of this edge, to hop
@@ -775,7 +775,7 @@ void SuffixTree::_printBWT(TreeNode* node, ostream& outputStream)
 void SuffixTree::WriteBWT(const string& ofname)
 {
     if (fileExists(ofname)) {
-        ofstream outputFile(ofname);
+        ofstream outputFile(ofname, ofstream::trunc);
         if (outputFile.good()) {
             _printBWT(_root, outputFile);
             outputFile.close();

@@ -10,19 +10,20 @@
 !Test1.txt
 !Test2.txt
 !BRCA2.txt
+!Tomato.txt
+!Yeast.txt
 !Test1_BWT.txt
 !Test2_BWT.txt
 !BRCA2_BWT.txt
 !Tomato_BWT.txt
-!Tomato.txt
-!Yeast.txt
-!README.md
-!compile
+!Yeast_BWT.txt
 !BRCA2_Test.txt
 !Tomato_Test.txt
 !Yeast_Test.txt
 !Test1_Test.txt
 !Test2_Test.txt
+!README.md
+!compile
 !runTests
 
 #implementation notes
@@ -37,3 +38,4 @@
 !main.cpp
 !Util.hpp
 !Util.cpp
+

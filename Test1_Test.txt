@@ -1,16 +1,16 @@
 Parsing sequence from file: Test1.txt. This may require a few seconds, for input files > 200kb.
 100% complete.                                       
-CPU time used: 1.00 ms
+CPU time used: 0.01 ms
 outputting to file: Test1_BWT.txt
-Native space stats by class (bytes):
-	sizeof(SuffixTree): 48
-	sizeof(TreeNode): 32
-	sizeof(Edge): 12
+Native space stats by class (bytes):
+	sizeof(SuffixTree): 40
+	sizeof(TreeNode): 48
+	sizeof(Edge): 16
 From input string of len 7, suffix-tree has 7 leaves, 4 internal nodes, and 10 edges.
-SuffixTree=48 bytes  TreeNode=32 bytes  Edge=12 bytes
-Given the static class size overhead, the current tree consumes a minimum of 520 bytes.
+SuffixTree=40 bytes  TreeNode=48 bytes  Edge=16 bytes
+Given the static class size overhead, the current tree consumes a minimum of 728 bytes.
 Actual size may differ as vector allocator allocates larger data capacity than usage per node.
-Space constant (tree size / input size): 74
+Space constant (tree size / input size): 104
 Searching for longest repeated substring...
 Longest repeating substring, of length 3 starting at string index 3: ANA
 Clearing tree... 
