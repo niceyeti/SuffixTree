@@ -1,6 +1,6 @@
 Parsing sequence from file: BRCA2.txt. This may require a few seconds, for input files > 200kb.
 Inserted 9999 of 11383 suffixes, 87% complete          100% complete.                                       
-CPU time used: 4.10 ms
+CPU time used: 3.53 ms
 outputting to file: BRCA2_BWT.txt
 Native space stats by class (bytes):
 	sizeof(SuffixTree): 40
