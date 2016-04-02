@@ -25,6 +25,8 @@
 !README.md
 !compile
 !runTests
+!report.pdf
+!report.tex
 
 #implementation notes
 !McCreight_ST_algorithm_detailed.pdf
