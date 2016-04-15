@@ -49,6 +49,9 @@ for the edge containing a pointer to this node.
 An alternative is to just have each node also store a pointer to the edge that points to it.
 Preconditon: Calling this on root would clearly be a logic error, by mccreight's algorithm this should
 never occur.
+
+TODO: This is a slow, structural requirement of not having each node store a pointer to its own associated edge. A child
+must look this up in its parent, in time linear over the number of siblings it has.
 */
 Edge* TreeNode::GetAssociatedEdge()
 {
