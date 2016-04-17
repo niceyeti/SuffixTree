@@ -65,6 +65,11 @@ class TreeNode {
         int NodeID;
         //the character-length of all edges up to this node. 
         int StringDepth;
+
+        //prg3 additions; should keep these. They are used for range querying leaves below some internal node, per prg3 (see spec for explanation)
+        int StartLeafIndex; 
+        int EndLeafIndex;
+
         //Edges MUST be stored in lexigraphic order
         vector<Edge> Edges;
         TreeNode* SuffixLink;
@@ -97,6 +102,7 @@ public:
     void Clear();
     void PrintBfs();
     void PrintDfs();
+    int FindLoc(const string& read);
     bool IsEmpty();
     void PrintChildren(TreeNode* node);
     void PrintNativeSpaceStats();
@@ -106,11 +112,18 @@ public:
     void WriteBWT(const string& outputFile);
     void SetAlphabet(const string& alphabet);
     void PrintLongestRepeatSubstring();
+
+    //TODO: There is a direct relationship between 'A' and the BWT output of a given tree. In the future, this object
+    //could be improved by refactoring the logic for each, since it was written for separate assignments.
+    void PrepareST();
+    vector<int> A;
 private:
-    int _numLeaves, _numInternalNodes, _numEdges;
+    int _numLeaves, _numInternalNodes, _numEdges, _nextIndex;
     string _alphabet;
     TreeNode* _root;
+    TreeNode*  _deepestInternalNode;
     string* _input;
+    void _prepareST_DFS(TreeNode* node, vector<int>& A);
     bool _isValidInput(const string* s);
     TreeNode* _nodeHops(TreeNode* u, const int suffixIndex);
     void _insertLeaf(TreeNode* parent, const int suffixIndex, const int edge_i);

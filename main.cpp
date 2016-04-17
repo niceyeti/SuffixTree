@@ -1,5 +1,4 @@
 #include "SuffixTree.hpp"
-//#include "FastaParser.hpp"
 
 /*
 Main driver for suffix tree testing.
@@ -15,18 +14,18 @@ int main(int argc, char* argv[])
     string sigma = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ$";
 
     
-    //For api for the hw
+    /*For api for the hw
     if (argc != 3) {
         cout << "Incorrect number of parameters. Usage: './st [local sequence file] [local alphabet file]'" << endl;
         return -1;
     }
+    */
 
-    inputFile = argv[1];
-    alphaFile = argv[2];
+    //inputFile = argv[1];
+    //alphaFile = argv[2];
 
-    //inputFile = "Test2.txt";
-    //alphaFile = "english.txt";
-    //alphaFile = "atcg.txt";
+    inputFile = "Test1.txt";
+    alphaFile = "english.txt";
     if (fileExists(inputFile)){
         if (fileExists(alphaFile)) {
             if (parseAlphabetFile(alphaFile, alphabet)) {
@@ -45,6 +44,9 @@ int main(int argc, char* argv[])
                     suffixTree.PrintNativeSpaceStats();
                     suffixTree.PrintSize();
                     suffixTree.PrintLongestRepeatSubstring();
+
+                    suffixTree.PrepareST();
+
                     suffixTree.Clear();
                 }
                 else {

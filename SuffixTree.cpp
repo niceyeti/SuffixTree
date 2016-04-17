@@ -10,6 +10,8 @@ TreeNode::TreeNode()
     Parent = NULL;
     StringDepth = -1;
     NodeID = -1;
+    StartLeafIndex = -1;
+    EndLeafIndex = -1;
 }
 
 TreeNode::~TreeNode()
@@ -156,6 +158,75 @@ SuffixTree::SuffixTree(string& input, const string& alphabet)
 SuffixTree::~SuffixTree()
 {
     Clear();
+}
+
+/*
+For prg3. Builds the A array for querying child leaf ranges of internal nodes in constant time. See
+*/
+void SuffixTree::PrepareST()
+{
+    if (this->IsEmpty()) {
+        cout << "ERROR suffix tree not built yet, cannot run PrepareST()" << endl;
+        return;
+    }
+
+    //set up A array
+    if (A.size() > 0) {
+        A.clear();
+    }
+    A.resize(_input->size());
+    //set _nextIndex to zero
+    _nextIndex = 0;
+
+    _prepareST_DFS(_root, A);
+
+    /*
+    cout << *_input << " A: ";
+    for (int i = 0; i < A.size(); i++) {
+        cout << A[i];
+    }
+    cout << endl;
+
+    //output here should be equivalent to BWT of input
+    for (int i = 0; i < A.size(); i++) {
+        int index = A[i] - 1;
+        if (index < 0) {
+            index = _input->length() - 1;
+        }
+
+        cout << A[i] << ": " << _input->at(index) << endl;
+    }
+    */
+}
+
+void SuffixTree::_prepareST_DFS(TreeNode* node, vector<int>& A)
+{
+    if (node != NULL) {
+        // case: node is a leaf node
+        if (!node->IsInternal()) {
+            A[_nextIndex] = node->NodeID;
+            if (node->StringDepth >= 1) {
+                node->StartLeafIndex = _nextIndex;
+                node->EndLeafIndex = _nextIndex;
+            }
+            _nextIndex++;
+        }
+        //case: node is an internal node
+        else {
+
+            //this assumes outedges are in lexicographic order!
+            for (int i = 0; i < node->Edges.size(); i++) {
+                _prepareST_DFS(node->Edges[i].Node, A); // recursively visit each child of the current internal node, lexicographically
+            }
+
+            // the above step would have computed the leaf lists for all of T's children. Now its time to set the leaf list interval for T. But do that only if T's string depth >= x.
+            if (node->StringDepth >= 1) {
+                //get startIndex/endIndex from left and right children
+                node->StartLeafIndex = node->Edges[0].Node->StartLeafIndex;
+                node->EndLeafIndex = node->Edges.back().Node->EndLeafIndex;
+            }
+        }
+    }
 }
 
 void SuffixTree::SetAlphabet(const string& alphabet)
@@ -678,6 +749,7 @@ void SuffixTree::Build(string* s, const string& alphabet)
     _root->NodeID = -1;
     _root->StringDepth = 0;
     _numInternalNodes = 1;
+    _deepestInternalNode = _root;
 
     for (i = 0, v = _root; i < s->length(); i++) {
         v = _insertSuffix(v,i);
@@ -686,6 +758,11 @@ void SuffixTree::Build(string* s, const string& alphabet)
         if (i % 10000 == 9999) {
             cout << "\rInserted " << i << " of " << s->length() << " suffixes, " << (int)(((float)i / (float)s->length()) * 100) << "% complete          " << flush;
         }
+
+        //stores the deepest internal node; after tree construction, it (its suffix link) is an entry point for many useful queries
+        if (v->StringDepth > _deepestInternalNode->StringDepth) {
+            _deepestInternalNode = v;
+        }
     }
     cout << "\r100% complete.                                       "<< endl;
 
@@ -693,6 +770,21 @@ void SuffixTree::Build(string* s, const string& alphabet)
     clock_t c_end = clock();
     cout << fixed << setprecision(2) << "CPU time used: " << 1000.0 * (c_end - c_start) / CLOCKS_PER_SEC << " ms" << endl;;
     #endif
+}
+
+/*
+A read-only function for performing read-mapping. See prg3 spec in that repo for a full explanation of this function.
+It finds the starting position of the maximal match of string 'read' in the suffix tree.
+*/
+vector<int> SuffixTree::FindLoc(const string& read)
+{
+    TreeNode* deepestNode = _root;
+    int readPtr;
+
+
+
+
+
 }
 
 /*
