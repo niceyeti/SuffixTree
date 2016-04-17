@@ -3,6 +3,11 @@
 #include <string>
 #endif
 
+//needed for stat'ing file sizes of very large files
+#ifndef __stat64
+#include <sys/stat.h>
+#endif
+
 #ifndef _IOSTREAM_
 #include <iostream>
 #endif
@@ -18,6 +23,7 @@ typedef struct sequence {
     string desc;
 }Sequence;
 
+size_t getFilesize(const string& filename);
 bool parseAlphabetFile(const string& alphaFile, string& alphabet);
 bool parseFastaFile(const string fname, Sequence& output, const string& sigma);
 bool fileExists(const string& path);

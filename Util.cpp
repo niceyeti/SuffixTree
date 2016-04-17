@@ -97,6 +97,17 @@ bool parseFastaFile(const string fname, Sequence& output, const string& sigma)
     return success;
 }
 
+size_t getFilesize(const string& filename)
+{
+    struct stat st;
+
+    if (stat(filename.c_str(), &st) != 0) {
+        return 0;
+    }
+
+    return st.st_size;
+}
+
 bool fileExists(const string& path)
 {
     ifstream myStream(path);
