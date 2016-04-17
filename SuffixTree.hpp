@@ -102,7 +102,7 @@ public:
     void Clear();
     void PrintBfs();
     void PrintDfs();
-    int FindLoc(const string& read);
+    TreeNode* FindLoc(const string& read, const int minMatchLen);
     bool IsEmpty();
     void PrintChildren(TreeNode* node);
     void PrintNativeSpaceStats();
@@ -112,6 +112,7 @@ public:
     void WriteBWT(const string& outputFile);
     void SetAlphabet(const string& alphabet);
     void PrintLongestRepeatSubstring();
+    bool IsPrepared();
 
     //TODO: There is a direct relationship between 'A' and the BWT output of a given tree. In the future, this object
     //could be improved by refactoring the logic for each, since it was written for separate assignments.
@@ -132,6 +133,7 @@ private:
     void _printDfs(TreeNode* node);
     //void _printBWT(TreeNode* node);
     void _printBWT(TreeNode* node, ostream& outputStream);
+    TreeNode* _findLoc(TreeNode* t, const string& read, int* readPtr);
     TreeNode* _findPath(TreeNode* v, const int startOffset, const int suffixIndex);
     TreeNode* _insertSuffix(TreeNode* lastInserted, const int suffixIndex);
 };

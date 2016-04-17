@@ -160,6 +160,11 @@ SuffixTree::~SuffixTree()
     Clear();
 }
 
+bool SuffixTree::IsPrepared()
+{
+    return !A.empty();
+}
+
 /*
 For prg3. Builds the A array for querying child leaf ranges of internal nodes in constant time. See
 */
@@ -180,7 +185,7 @@ void SuffixTree::PrepareST()
 
     _prepareST_DFS(_root, A);
 
-    /*
+    /* //debugging; A array can be verified by making sure a slight transform on it returns the BWT
     cout << *_input << " A: ";
     for (int i = 0; i < A.size(); i++) {
         cout << A[i];
@@ -275,6 +280,7 @@ void SuffixTree::Clear()
         _numInternalNodes = 0;
         _numLeaves = 0;
         _alphabet.clear();
+        A.clear();
     }
 }
 
@@ -775,16 +781,80 @@ void SuffixTree::Build(string* s, const string& alphabet)
 /*
 A read-only function for performing read-mapping. See prg3 spec in that repo for a full explanation of this function.
 It finds the starting position of the maximal match of string 'read' in the suffix tree.
+
+TODO: There could actually be multiple or k-best common substrings, which this could return. This returns
+only one of the possible deepestNodes, although there could be more than one.
 */
-vector<int> SuffixTree::FindLoc(const string& read)
+TreeNode* SuffixTree::FindLoc(const string& read, const int minMatchLen)
 {
-    TreeNode* deepestNode = _root;
-    int readPtr;
+    TreeNode* u, * deepestNode;
+    int readPtr = 0;
 
+    //Algorithm gist: iteratively call findLoc(readPtr) until readPtr has exhausted read
+    readPtr = 0;
+    u = deepestNode = _root;
+    while (readPtr < read.length()) {
+        //find the deepest internal node of maximal match for this suffix of the read
+        u = _findLoc(u, read, &readPtr);
+        //update starting node t, from which to search
+        u = u->SuffixLink;
+        //update deepest node found so far
+        if (u->StringDepth > deepestNode->StringDepth && u->StringDepth >= minMatchLen) {
+            deepestNode = u;
+        }
+    }
 
+    return deepestNode;
+}
 
+/*
+See Prg3SPect.txt for an explanation of this function. 
+*/
+TreeNode* SuffixTree::_findLoc(TreeNode* t, const string& read, int* readPtr)
+{
+    //walk edges, and insert new leaf when insertion point is found
+    TreeNode* u, *parent;
+    bool found;
+    int edgeIt;
+    Edge* edge;
 
+    //init
+    u = parent = t;
+    found = false;
+    edge = parent->GetEdge(read[*readPtr], *_input);
 
+    //walk edges until we hit a mismatch or exhaust read, and return last internal node visited
+    while (!found) {
+        //case A: match terminated exactly at node u
+        if (edge == NULL) {
+            found = true;
+            u = parent;
+        }
+        //else walk the current edge comparing chars
+        else {
+            //walk the edge looking for a mismatch
+            edgeIt = edge->i;
+            while (*readPtr < read.length() && edgeIt <= edge->j && read[*readPtr] == _input->at(edgeIt)) {
+                edgeIt++;  (*readPtr)++;
+            }
+
+            //case B: mismatch or readPtr exhausted read string within the edge, so back up to last u, and set readPtr back to where it was at this u
+            if (edgeIt <= edge->j || (*readPtr >= read.length())) {
+                found = true;
+                //last parent is u
+                u = parent;
+                //back up readPtr to where it was when we first encountered u
+                *readPtr -= (edgeIt - edge->i);
+            }
+            //else, all chars matched on this edge, so advance to the next edge
+            else {
+                parent = edge->Node;
+                edge = parent->GetEdge(read[*readPtr], *_input);
+            }
+        }
+    }
+
+    return u;
 }
 
 /*
