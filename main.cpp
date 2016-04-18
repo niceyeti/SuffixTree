@@ -1,5 +1,12 @@
 #include "SuffixTree.hpp"
 
+int max(int l, int r)
+{
+    if (l > r)
+        return l;
+    return r;
+}
+
 /*
 Main driver for suffix tree testing.
 */
@@ -24,7 +31,7 @@ int main(int argc, char* argv[])
     //inputFile = argv[1];
     //alphaFile = argv[2];
 
-    inputFile = "Test1.txt";
+    inputFile = "Yeast.txt";
     alphaFile = "english.txt";
     if (fileExists(inputFile)){
         if (fileExists(alphaFile)) {
@@ -45,7 +52,16 @@ int main(int argc, char* argv[])
                     suffixTree.PrintSize();
                     suffixTree.PrintLongestRepeatSubstring();
 
+                    //prg3 testing
+
                     suffixTree.PrepareST();
+                    string read = "TTTTTTTT";
+                    TreeNode* result = suffixTree.FindLoc(read,1);
+                    cout << "found candidates:" << endl;
+                    for (int i = result->StartLeafIndex; i < result->EndLeafIndex; i++) {
+                        //extract subtrings +/-read.length() to each side of leafIndex
+                        cout << inputSequence.seq.substr(max(suffixTree.A[i] - read.length(), 0), read.length() * 2) << endl;
+                    }
 
                     suffixTree.Clear();
                 }

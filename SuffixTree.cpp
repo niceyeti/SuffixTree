@@ -210,7 +210,7 @@ void SuffixTree::_prepareST_DFS(TreeNode* node, vector<int>& A)
         // case: node is a leaf node
         if (!node->IsInternal()) {
             A[_nextIndex] = node->NodeID;
-            if (node->StringDepth >= 1) {
+            if (node->StringDepth >= 1) {  //TODO: magic number 1 is actually a parameter determining the depth of nodes to include (see prg3Spec.txt)
                 node->StartLeafIndex = _nextIndex;
                 node->EndLeafIndex = _nextIndex;
             }
@@ -218,14 +218,13 @@ void SuffixTree::_prepareST_DFS(TreeNode* node, vector<int>& A)
         }
         //case: node is an internal node
         else {
-
-            //this assumes outedges are in lexicographic order!
+            //this requires out-edges are in lexicographic order!
             for (int i = 0; i < node->Edges.size(); i++) {
                 _prepareST_DFS(node->Edges[i].Node, A); // recursively visit each child of the current internal node, lexicographically
             }
 
             // the above step would have computed the leaf lists for all of T's children. Now its time to set the leaf list interval for T. But do that only if T's string depth >= x.
-            if (node->StringDepth >= 1) {
+            if (node->StringDepth >= 0) {  //Magic number zero is actually a parameter, here 0 so the root gets values as well.
                 //get startIndex/endIndex from left and right children
                 node->StartLeafIndex = node->Edges[0].Node->StartLeafIndex;
                 node->EndLeafIndex = node->Edges.back().Node->EndLeafIndex;
@@ -788,7 +787,7 @@ only one of the possible deepestNodes, although there could be more than one.
 TreeNode* SuffixTree::FindLoc(const string& read, const int minMatchLen)
 {
     TreeNode* u, * deepestNode;
-    int readPtr = 0;
+    int readPtr;
 
     //Algorithm gist: iteratively call findLoc(readPtr) until readPtr has exhausted read
     readPtr = 0;
@@ -796,12 +795,12 @@ TreeNode* SuffixTree::FindLoc(const string& read, const int minMatchLen)
     while (readPtr < read.length()) {
         //find the deepest internal node of maximal match for this suffix of the read
         u = _findLoc(u, read, &readPtr);
-        //update starting node t, from which to search
-        u = u->SuffixLink;
         //update deepest node found so far
         if (u->StringDepth > deepestNode->StringDepth && u->StringDepth >= minMatchLen) {
             deepestNode = u;
         }
+        //now update starting node t, from which to search
+        u = u->SuffixLink;
     }
 
     return deepestNode;
@@ -828,6 +827,8 @@ TreeNode* SuffixTree::_findLoc(TreeNode* t, const string& read, int* readPtr)
         //case A: match terminated exactly at node u
         if (edge == NULL) {
             found = true;
+            //needed? if not here, seems there would be an infinite loop at the root
+            (*readPtr)++;
             u = parent;
         }
         //else walk the current edge comparing chars
@@ -839,12 +840,14 @@ TreeNode* SuffixTree::_findLoc(TreeNode* t, const string& read, int* readPtr)
             }
 
             //case B: mismatch or readPtr exhausted read string within the edge, so back up to last u, and set readPtr back to where it was at this u
-            if (edgeIt <= edge->j || (*readPtr >= read.length())) {
+            if (edgeIt <= edge->j || (*readPtr >= read.length())) { //the left conditional should always suffice for the right one!
                 found = true;
                 //last parent is u
                 u = parent;
                 //back up readPtr to where it was when we first encountered u
-                *readPtr -= (edgeIt - edge->i);
+                if ((edgeIt - edge->i) > 1 && u != u->SuffixLink) { //check is required for the terminal case; otherwise there is an infinite loop here if u is root, and edge len is one
+                    *readPtr -= (edgeIt - edge->i);
+                }
             }
             //else, all chars matched on this edge, so advance to the next edge
             else {
