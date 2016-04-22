@@ -75,7 +75,7 @@ bool TreeNode::HasChild()
     return this->NumEdges() == 0;
 }
 
-//Insert an edge into the node, at index in Edges given by c. Returns false if the edge already exists.
+//Insert an edge (and its associated child node) into a node, at index in Edges given by c. Returns false if the edge already exists.
 void TreeNode::AddEdge(int edge_i, int edge_j, TreeNode* edgeChild, const string& input)
 {
     int i;
@@ -116,6 +116,9 @@ void TreeNode::AddEdge(int edge_i, int edge_j, TreeNode* edgeChild, const string
         Edges[i].j = edge_j;
         Edges[i].Node = edgeChild;
     }
+
+    //TODO: very inefficient doing this after every insertion
+    this->Edges.shrink_to_fit();
 
     //lastly, set the child to point at the parent
     edgeChild->Parent = this;
@@ -804,6 +807,28 @@ TreeNode* SuffixTree::FindLoc(const string& read, const int minMatchLen)
     }
 
     return deepestNode;
+}
+
+/*
+This just for some forms of debugging. Given a ptr to a node in the tree, print the path label 'alpha'
+from the root to this node.
+*/
+void SuffixTree::PrintPrefix(TreeNode* node) 
+{
+    Edge* edge;
+    TreeNode *child;
+    string prefix = "";
+
+    if (node != NULL) {
+        //climb to root along parents
+        child = node;
+        while (child != _root) {
+            edge = child->GetAssociatedEdge();
+            prefix = _input->substr(edge->i, edge->j - edge->i + 1) + prefix;
+            child = child->Parent;
+        }
+        cout << "prefix: " << prefix << endl;
+    }
 }
 
 /*

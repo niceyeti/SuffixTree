@@ -98,6 +98,7 @@ public:
     SuffixTree();
     SuffixTree(string& input, const string& alphabet);
     ~SuffixTree();
+    void PrintPrefix(TreeNode* node);
     void Build(string* s, const string& alphabet);
     void Clear();
     void PrintBfs();
