@@ -1,5 +1,6 @@
 #pragma once
 
+
 #ifndef _IOSTREAM_
 #include <iostream>
 #endif
@@ -32,7 +33,6 @@
 #include "Util.hpp"
 
 #define DBG
-
 #define PERFTEST
 
 using namespace std;
@@ -131,7 +131,6 @@ private:
     TreeNode* _splitEdge(TreeNode* parent, Edge* oldEdge, const int edgeSplitIndex);
     void _clear(TreeNode* node);
     void _printDfs(TreeNode* node);
-    //void _printBWT(TreeNode* node);
     void _printBWT(TreeNode* node, ostream& outputStream);
     TreeNode* _findLoc(TreeNode* t, const string& read, int* readPtr);
     TreeNode* _findPath(TreeNode* v, const int startOffset, const int suffixIndex);

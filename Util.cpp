@@ -97,6 +97,58 @@ bool parseFastaFile(const string fname, Sequence& output, const string& sigma)
     return success;
 }
 
+//Dumb utility for parsing a file that containing 2 fasta files concatenated, as required in prg1.
+void parse2FastaFile(const string fname, Sequence& seq1, Sequence& seq2)
+{
+    int seqnum;
+    ifstream myReadFile;
+    myReadFile.open(fname);
+    string line;
+    string validBases = "atcg";
+
+    string& s1 = seq1.seq;
+    string& s2 = seq2.seq;
+
+    if (myReadFile.is_open()) {
+        //init
+        s1.clear();
+        s2.clear();
+        seqnum = 0;
+
+        while (getline(myReadFile, line)) {
+            //check if line begins with '>'; if so, advance state, and grab the description line
+            if (line.length() > 0 && line[0] == '>') {
+                if (seqnum == 0)
+                    seq1.desc = line.substr(1, line.length());
+                else
+                    seq2.desc = line.substr(1, line.length());
+                seqnum++;
+            }
+            else {
+                switch (seqnum) {
+                    //parsing sequence 1
+                case 1:
+                    s1 += filter(line, validBases);
+                    break;
+                    //parsing sequence 2
+                case 2:
+                    s2 += filter(line, validBases);
+                    break;
+                default:
+                    cout << "ERROR unknown seqnum: " << seqnum << endl;
+                    break;
+                }
+            }
+        }
+    }
+    myReadFile.close();
+
+    //cout << "Parsed sequences:" << endl;;
+    //cout << "s1 >>" << s1 << endl;
+    //cout << "s2 >>" << s2 << endl;
+}
+
+
 size_t getFilesize(const string& filename)
 {
     struct stat st;
