@@ -204,12 +204,12 @@ void SuffixTree::PrepareST()
     */
 }
 
-void SuffixTree::_prepareST_DFS(TreeNode* node, vector<int>& A)
+void SuffixTree::_prepareST_DFS(TreeNode* node, vector<int>& A_array)
 {
     if (node != NULL) {
         // case: node is a leaf node
         if (!node->IsInternal()) {
-            A[_nextIndex] = node->NodeID;
+            A_array[_nextIndex] = node->NodeID;
             if (node->StringDepth >= 1) {  //TODO: magic number 1 is actually a parameter determining the depth of nodes to include (see prg3Spec.txt)
                 node->StartLeafIndex = _nextIndex;
                 node->EndLeafIndex = _nextIndex;
@@ -220,7 +220,7 @@ void SuffixTree::_prepareST_DFS(TreeNode* node, vector<int>& A)
         else {
             //this requires out-edges are in lexicographic order!
             for (int i = 0; i < node->Edges.size(); i++) {
-                _prepareST_DFS(node->Edges[i].Node, A); // recursively visit each child of the current internal node, lexicographically
+                _prepareST_DFS(node->Edges[i].Node, A_array); // recursively visit each child of the current internal node, lexicographically
             }
 
             // the above step would have computed the leaf lists for all of T's children. Now its time to set the leaf list interval for T. But do that only if T's string depth >= x.
@@ -867,7 +867,7 @@ build procedure, this just the work explicitly after building the tree, for the 
 */
 void SuffixTree::PrintLongestRepeatSubstring()
 {
-    int i, maxDepth;
+    int i;
     TreeNode* node, *deepest;
     list<TreeNode*> nodeQ;
 
