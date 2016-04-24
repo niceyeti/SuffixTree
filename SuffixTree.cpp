@@ -463,14 +463,10 @@ TreeNode* SuffixTree::_nodeHops(TreeNode* u, const int suffixIndex)
         //get the next edge
         c = _input->at(betaIt);
         hoppedEdge = v_prime->GetEdge(c,*_input);
-        if (hoppedEdge == NULL) {
-            //this is valid;
-            //cout << "ERROR hopped edge NULL in nodeHops" << endl;
-        }
-        else {
-            //get the len of this edge, to hop
+        if (hoppedEdge != NULL) {
             edgeLen = hoppedEdge->j - hoppedEdge->i + 1;
         }
+        //else: its valid for hoppedEdge to be null
     }
     /*Post-loop: (1) landed directly on an internal node (Beta was exausted), or (2) we stopped above an edge too
     long for the remainder of Beta. In case (1), we return v_prime. In case (2), an internal node needs to be
@@ -526,7 +522,8 @@ TreeNode* SuffixTree::_insertSuffix(TreeNode* u, const int suffixIndex)
     if (u->SuffixLink != NULL && u != _root) {
          //run findPath from v, with string index starting at suffixIndex plus the skipped chars of starting from v
         //cout << "dbg" << endl;
-        v = _findPath(u->SuffixLink, suffixIndex + u->StringDepth - 1, suffixIndex);
+        //v = _findPath(u->SuffixLink, suffixIndex + u->StringDepth - 1, suffixIndex);
+        v = _findPath(u->SuffixLink, suffixIndex + u->SuffixLink->StringDepth, suffixIndex);
     }
     //case 1B: SL(u) is known and u == root, just call findPath from root
     else if (u->SuffixLink != NULL && u == _root) {
@@ -552,7 +549,7 @@ TreeNode* SuffixTree::_insertSuffix(TreeNode* u, const int suffixIndex)
         if (u != _root) {
             u->SuffixLink = v;
         }
-        v = _findPath(v, suffixIndex + v->StringDepth, suffixIndex);
+        v = _findPath(v, v->StringDepth + suffixIndex, suffixIndex);
     }
 
     #if defined DBG
@@ -606,12 +603,17 @@ TreeNode* SuffixTree::_splitEdge(TreeNode* parent, Edge* oldEdge, const int edge
     _numInternalNodes++;
     //set internal node id to the negation of the number of internal nodes
     newInternalNode->NodeID = -1 * _numInternalNodes;
-    newInternalNode->StringDepth = parent->StringDepth + (edgeSplitIndex - oldEdge->i);  //4/23: subtracted 1
+    //OLD: this string depth was wrong for some inputs, but builds a structurally correct tree
+    //newInternalNode->StringDepth = parent->StringDepth + (edgeSplitIndex - oldEdge->i);
 
     newInternalNode->AddEdge(edgeSplitIndex, oldEdge->j, oldEdge->Node, *_input);
     //fix the original edge
     oldEdge->j = edgeSplitIndex - 1;
     oldEdge->Node = newInternalNode;
+
+    //4/23 modifications per edge indices being messed up
+    newInternalNode->StringDepth = parent->StringDepth + oldEdge->j - oldEdge->i + 1;
+
     _numEdges++;
 
     return newInternalNode;
@@ -854,7 +856,7 @@ TreeNode* SuffixTree::_findLoc(TreeNode* t, const string& read, int* readPtr)
         //case A: match terminated exactly at node u
         if (edge == NULL) {
             found = true;
-            cout << "Case A" << endl;
+            //cout << "Case A" << endl;
             //needed? if not here, seems there would be an infinite loop at the root
             (*readPtr)++;
             u = parent;

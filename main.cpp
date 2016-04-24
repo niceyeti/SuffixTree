@@ -31,7 +31,7 @@ int main(int argc, char* argv[])
     //inputFile = argv[1];
     //alphaFile = argv[2];
 
-    inputFile = "Yeast.txt";
+    inputFile = "Test2.txt";
     alphaFile = "english.txt";
     if (fileExists(inputFile)){
         if (fileExists(alphaFile)) {
@@ -46,6 +46,7 @@ int main(int argc, char* argv[])
                     outputFile += "_BWT.txt";
                     cout << "outputting to file: " << outputFile << endl;
                     suffixTree.WriteBWT(outputFile);
+                    suffixTree.PrintBWT();
                     //Uncomment the next line to print the BWT to the console, which is awful for large strings.
                     //suffixTree.PrintBWT();
                     suffixTree.PrintNativeSpaceStats();
@@ -53,7 +54,7 @@ int main(int argc, char* argv[])
                     suffixTree.PrintLongestRepeatSubstring();
 
                     //prg3 testing
-
+                    /*
                     suffixTree.PrepareST();
                     string read = "TTTTTTTT";
                     TreeNode* result = suffixTree.FindLoc(read,1);
@@ -62,7 +63,7 @@ int main(int argc, char* argv[])
                         //extract subtrings +/-read.length() to each side of leafIndex
                         cout << inputSequence.seq.substr(max(suffixTree.A[i] - read.length(), 0), read.length() * 2) << endl;
                     }
-
+                    */
                     suffixTree.Clear();
                 }
                 else {
