@@ -114,7 +114,7 @@ void parse2FastaFile(const string fname, Sequence& seq1, Sequence& seq2)
     ifstream myReadFile;
     myReadFile.open(fname);
     string line;
-    string validBases = "atcg";
+    string validBases = "atcgATCG";
 
     string& s1 = seq1.seq;
     string& s2 = seq2.seq;

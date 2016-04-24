@@ -870,11 +870,6 @@ TreeNode* SuffixTree::_findLoc(TreeNode* t, const string& read, int* readPtr)
                 edgeIt++;  (*readPtr)++;
             }
 
-            if (edge->j == 481)
-            {
-                this->PrintPrefix(edge->Node);
-            }
-
             //case B: mismatch or readPtr exhausted read string within the edge, so back up to last u, and set readPtr back to where it was at this u
             if (edgeIt <= edge->j || (*readPtr >= read.length())) { //the left conditional should always suffice for the right one!
                 found = true;
