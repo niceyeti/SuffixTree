@@ -62,11 +62,15 @@ sigma: the valid chars; anything not in these will be omitted
 bool parseFastaFile(const string fname, Sequence& output, const string& sigma)
 {
     bool success = false;
-    int seqnum;
+    int seqnum, thousands = 0;
     ifstream inputFile;
     string line;
+    int fsize;
 
     if (fileExists(fname)) {
+        fsize = getFilesize(fname);
+        output.seq.reserve(fsize);
+
         inputFile.open(fname);
         if (inputFile.is_open()) {
             //init
@@ -82,9 +86,15 @@ bool parseFastaFile(const string fname, Sequence& output, const string& sigma)
                 else {
                     output.seq += filter(line, sigma);
                 }
-                success = true;
+
+                if ((output.seq.size() & 0x00001FFF) == 0) {
+                    thousands = output.seq.size() / 5000;
+                    cout << "\r" << (int)(100 * (float)output.seq.size() / (float)fsize) << "% complete                " << flush;
+                }
             }
+            cout << "\r100% complete" << endl;
             inputFile.close();
+            success = true;
         }
         else {
             cout << "ERROR file could not be opened! " << fname << endl;

@@ -117,9 +117,6 @@ void TreeNode::AddEdge(int edge_i, int edge_j, TreeNode* edgeChild, const string
         Edges[i].Node = edgeChild;
     }
 
-    //TODO: very inefficient doing this after every insertion
-    this->Edges.shrink_to_fit();
-
     //lastly, set the child to point at the parent
     edgeChild->Parent = this;
 }
@@ -233,6 +230,9 @@ void SuffixTree::_prepareST_DFS(TreeNode* node, vector<int>& A_array)
                 node->EndLeafIndex = node->Edges.back().Node->EndLeafIndex;
             }
         }
+
+        //TODO: Memory bandaid. This should be removed. DFS traversal is a good opportunity to shrink excessive vector allocs, but its the vectors themselves that need removal. 
+        node->Edges.shrink_to_fit();
     }
 }
 
@@ -591,7 +591,7 @@ void SuffixTree::_insertLeaf(TreeNode* parent, const int suffixIndex, const int 
 /*
 As with _insertLeaf, this is just code extracted from findPath so findPath is more readable.
 
-Given the require parameters, split an edge into two edges, thread in a new internal node, and
+Given the required parameters, split an edge into two edges, thread in a new internal node, and
 return the pointer to new internal node. edgeSplitIndex is here defined to be the start
 index of the NEW continuation edge; equivalently, it is where the letter mismatch occurred. So
 if an edge with label [1-9] matches up to index 4, then edgeSplitIndex is 4, and the new edges
@@ -606,7 +606,7 @@ TreeNode* SuffixTree::_splitEdge(TreeNode* parent, Edge* oldEdge, const int edge
     _numInternalNodes++;
     //set internal node id to the negation of the number of internal nodes
     newInternalNode->NodeID = -1 * _numInternalNodes;
-    newInternalNode->StringDepth = parent->StringDepth + (edgeSplitIndex - oldEdge->i);
+    newInternalNode->StringDepth = parent->StringDepth + (edgeSplitIndex - oldEdge->i);  //4/23: subtracted 1
 
     newInternalNode->AddEdge(edgeSplitIndex, oldEdge->j, oldEdge->Node, *_input);
     //fix the original edge
@@ -763,7 +763,7 @@ void SuffixTree::Build(string* s, const string& alphabet)
         v = _insertSuffix(v,i);
 
         //report progress, for very large trees
-        if (i % 10000 == 9999) {
+        if((i & 0x0001FFFF) == 0) {
             cout << "\rInserted " << i << " of " << s->length() << " suffixes, " << (int)(((float)i / (float)s->length()) * 100) << "% complete          " << flush;
         }
 
@@ -776,7 +776,7 @@ void SuffixTree::Build(string* s, const string& alphabet)
 
     #ifdef PERFTEST
     clock_t c_end = clock();
-    cout << fixed << setprecision(2) << "CPU time used: " << 1000.0 * (c_end - c_start) / CLOCKS_PER_SEC << " ms" << endl;;
+    cout << fixed << setprecision(2) << "CPU time used: " << 1000.0 * (c_end - c_start) / CLOCKS_PER_SEC << " ms" << endl;
     #endif
 }
 
@@ -799,7 +799,8 @@ TreeNode* SuffixTree::FindLoc(const string& read, const int minMatchLen)
         //find the deepest internal node of maximal match for this suffix of the read
         u = _findLoc(u, read, &readPtr);
         //update deepest node found so far
-        if (u->StringDepth > deepestNode->StringDepth && u->StringDepth >= minMatchLen) {
+        if (u->StringDepth > deepestNode->StringDepth){
+        //if (u->StringDepth > deepestNode->StringDepth && u->StringDepth >= minMatchLen) {
             deepestNode = u;
         }
         //now update starting node t, from which to search
@@ -841,6 +842,7 @@ TreeNode* SuffixTree::_findLoc(TreeNode* t, const string& read, int* readPtr)
     bool found;
     int edgeIt;
     Edge* edge;
+    int initial;
 
     //init
     u = parent = t;
@@ -852,6 +854,7 @@ TreeNode* SuffixTree::_findLoc(TreeNode* t, const string& read, int* readPtr)
         //case A: match terminated exactly at node u
         if (edge == NULL) {
             found = true;
+            cout << "Case A" << endl;
             //needed? if not here, seems there would be an infinite loop at the root
             (*readPtr)++;
             u = parent;
@@ -860,18 +863,27 @@ TreeNode* SuffixTree::_findLoc(TreeNode* t, const string& read, int* readPtr)
         else {
             //walk the edge looking for a mismatch
             edgeIt = edge->i;
+            //initial = *readPtr;
             while (*readPtr < read.length() && edgeIt <= edge->j && read[*readPtr] == _input->at(edgeIt)) {
                 edgeIt++;  (*readPtr)++;
+            }
+
+            if (edge->j == 481)
+            {
+                this->PrintPrefix(edge->Node);
             }
 
             //case B: mismatch or readPtr exhausted read string within the edge, so back up to last u, and set readPtr back to where it was at this u
             if (edgeIt <= edge->j || (*readPtr >= read.length())) { //the left conditional should always suffice for the right one!
                 found = true;
-                //last parent is u
+                //last parent is our u
                 u = parent;
                 //back up readPtr to where it was when we first encountered u
                 if ((edgeIt - edge->i) > 1 && u != u->SuffixLink) { //check is required for the terminal case; otherwise there is an infinite loop here if u is root, and edge len is one
                     *readPtr -= (edgeIt - edge->i);
+                    //if (*readPtr != initial) {
+                    //    cout << "BINGO!!! reset failed" << endl;
+                    //}
                 }
             }
             //else, all chars matched on this edge, so advance to the next edge
